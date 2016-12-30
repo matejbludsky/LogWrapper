@@ -29,12 +29,8 @@ Documentation can be found in the repository/HowTo
 
 ### Download 
 
-####0.0.2-beta
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.2-beta/logwrapper-0.0.2-beta-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.2-beta.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.2-beta.tar.gz]
+####0.0.3-beta
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.3-beta/logwrapper-0.0.3-beta-dist.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.3-beta.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.3-beta.tar.gz]
 
-####0.0.1-beta
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.1-beta/logwrapper-0.0.1-beta-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.1-beta.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.1-beta.tar.gz]
