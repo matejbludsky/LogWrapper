@@ -25,7 +25,7 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.1-beta
+## LogWrapper 0.0.3-beta
 
 ### Download 
 
