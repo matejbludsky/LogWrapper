@@ -27,6 +27,14 @@ Documentation can be found in the repository/HowTo
 
 ## LogWrapper 0.0.3-beta
 
+### What's new
+- Added support for TraceLog files
+-- preview
+-- SOAPUI export V02 version only
+-Bugfix
+
+
+
 ### Download 
 
 ####0.0.3-beta
