@@ -1,0 +1,27 @@
+<con:testStep type="request" name="$TEST_STEP_NAME$"
+	id="d06b4f98-7277-4186-be02-c71f3a5111d7">
+	<con:settings />
+	<con:config xsi:type="con:RequestStep"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+		<con:interface>$BINDING$</con:interface>
+		<con:operation>$OPERATION$</con:operation>
+		<con:request name="$REQUEST_NAME$" outgoingWss=""
+			incomingWss="" timeout="" sslKeystore="" useWsAddressing="false"
+			useWsReliableMessaging="false" wssPasswordType="" id="$UUID$">
+			<con:settings>
+				<con:setting
+					id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting>
+			</con:settings>
+			<con:encoding>UTF-8</con:encoding>
+			<con:endpoint>$ENDPOINT$</con:endpoint>
+			<con:request><![CDATA[$SOAP_REQUEST$]]></con:request>
+			<con:credentials>
+				<con:authType>No Authorization</con:authType>
+			</con:credentials>
+			<con:jmsConfig JMSDeliveryMode="PERSISTENT" />
+			<con:jmsPropertyConfig />
+			<con:wsaConfig mustUnderstand="NONE" version="200508" />
+			<con:wsrmConfig version="1.2" />
+		</con:request>
+	</con:config>
+</con:testStep>

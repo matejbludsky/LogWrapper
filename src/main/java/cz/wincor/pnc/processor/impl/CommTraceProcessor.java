@@ -1,0 +1,154 @@
+package cz.wincor.pnc.processor.impl;
+
+import java.io.File;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.log4j.Logger;
+
+import cz.wincor.pnc.GUI.DragAndDropPanel;
+import cz.wincor.pnc.error.CommTraceProcessException;
+import cz.wincor.pnc.processor.AbstractProcessor;
+import cz.wincor.pnc.settings.LogWrapperSettings;
+import cz.wincor.pnc.util.TraceStringUtils;
+
+/**
+ * Class takes CommTrace log and process it for the application view
+ * 
+ * @author matej.bludsky
+ *
+ */
+public class CommTraceProcessor extends AbstractProcessor {
+
+    private static final Logger LOG = Logger.getLogger(CommTraceProcessor.class);
+
+    public static final String WSCC_TAG = "|>WS|";
+
+    public CommTraceProcessor(File logFile) {
+        super(logFile);
+        LOG.info("Starting CommTraceProcessor");
+    }
+
+    /**
+     * CommTrace files already merged into logFile * Method takes merged file and extracts information that is needed in
+     * order to complete SOAPUI Suite conversion. Method is searching for |>WS| String, this is a tag for
+     * WebServiceClientConnector
+     * 
+     * Method is going to analyze each line and extract only requests SOAP messages
+     */
+    @Override
+    public void process() throws CommTraceProcessException {
+        if (originalLogFile == null) {
+            throw new CommTraceProcessException("Log File cannot be null");
+        }
+        try {
+            LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
+            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getAbsolutePath(), true);
+            int numberOfReadMessages = readWSCCRequestsIntoTmpFile();
+            if (numberOfReadMessages == 0) {
+                DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
+                return;
+            }
+        } catch (Exception e) {
+            LOG.error("Cannot extract comm trace " + originalLogFile.getAbsolutePath(), e);
+        }
+    }
+
+    /**
+     * s Method is going to filter WSCC messages from the merged log file
+     */
+    private int readWSCCRequestsIntoTmpFile() {
+
+        Scanner scan = null;
+        String currentLine = null;
+        String WSCCMessage = null;
+        int messageCount = 0;
+        boolean activeMessage = false;
+
+        try {
+            scan = new Scanner(originalLogFile);
+            while (scan.hasNextLine()) {
+                currentLine = scan.nextLine();
+
+                if (currentLine.startsWith(WSCC_TAG) || activeMessage) {
+                    activeMessage = true;
+                    WSCCMessage += currentLine;
+                    // WSCC entry
+                    // look for soap footer
+                    if (findSubstring(SOAP_FOOTER[0].toLowerCase(), currentLine.toLowerCase()) || findSubstring(SOAP_FOOTER[1].toLowerCase(), currentLine.toLowerCase())) {
+                        String key = WSCCMessage.substring(WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length(), WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length() + 23);
+                        String message = filterSOAPMessage(WSCCMessage);
+                        if (TraceStringUtils.isWSCCMessage(message) && isCompliant(message)) {
+                            writeToTmpFile(key + AbstractProcessor.SEPARATOR + message, getExtractedTmpFile());
+                            messageCount++;
+                        }
+                        WSCCMessage = "";
+                        activeMessage = false;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            LOG.error("Cannot import file", e);
+        } finally {
+            try {
+                if (scan != null) {
+                    scan.close();
+                }
+            } catch (Exception e2) {
+                LOG.error("Cannot close resource", e2);
+            }
+        }
+
+        return messageCount;
+
+    }
+
+    /**
+     * Filters only SOAP messages from the String line content
+     * 
+     * @param line
+     * @return
+     */
+    private String filterSOAPMessage(String line) {
+
+        int indexOfSOAPHeader = -1;
+        int closingTagSOAPHeader = -1;
+
+        int footerSubstringLength = 0;
+
+        // HEADERS
+        for (String header : SOAP_HEADERS) {
+            int index = findIdexOf(header, line);
+            if (index != -1) {
+                indexOfSOAPHeader = index;
+
+            }
+        }
+
+        // FOOTERS
+        for (String footer : SOAP_FOOTER) {
+            int index = findIdexOf(footer, line);
+            if (index != -1) {
+                closingTagSOAPHeader = index;
+                footerSubstringLength = footer.length();
+
+            }
+        }
+
+        if (indexOfSOAPHeader == -1 || closingTagSOAPHeader == -1) {
+            return null;
+        }
+
+        String message = line.substring(indexOfSOAPHeader, closingTagSOAPHeader + footerSubstringLength);
+
+        if (!message.endsWith(">")) {
+            message += ">";
+        }
+
+        return message;
+
+    }
+
+}

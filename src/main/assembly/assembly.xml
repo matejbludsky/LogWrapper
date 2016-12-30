@@ -1,0 +1,68 @@
+<assembly>
+	<id>dist</id>
+	<!-- Specifies that our binary distribution is a zip package -->
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<includeBaseDirectory>true</includeBaseDirectory>
+	<baseDirectory>LogWrapper</baseDirectory>
+
+	<files>
+		<file>
+			<source>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+			</source>
+			<outputDirectory>lib</outputDirectory>
+		</file>
+	</files>
+
+	<fileSets>
+		<fileSet>
+			<directory>target</directory>
+			<outputDirectory>.</outputDirectory>
+			<includes>
+				<include>*.exe</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources/conf</directory>
+			<outputDirectory>/conf</outputDirectory>
+			<includes>
+				<include>*.properties</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources</directory>
+			<outputDirectory>/template</outputDirectory>
+			<includes>
+				<include>emptyProjectSOAPUI.xml</include>
+				<include>TestStepTemplate.xml</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>.</directory>
+			<outputDirectory>logs</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directory>.</directory>
+			<outputDirectory>tmp</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directory>.</directory>
+			<outputDirectory>soapui</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources/WSDL</directory>
+			<outputDirectory>WSDL</outputDirectory>
+		</fileSet>
+	</fileSets>
+</assembly>
