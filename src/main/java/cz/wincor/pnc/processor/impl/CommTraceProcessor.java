@@ -2,15 +2,12 @@ package cz.wincor.pnc.processor.impl;
 
 import java.io.File;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.error.CommTraceProcessException;
 import cz.wincor.pnc.processor.AbstractProcessor;
-import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
@@ -44,7 +41,7 @@ public class CommTraceProcessor extends AbstractProcessor {
         }
         try {
             LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getAbsolutePath(), true);
+            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getName(), true);
             int numberOfReadMessages = readWSCCRequestsIntoTmpFile();
             if (numberOfReadMessages == 0) {
                 DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
