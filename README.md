@@ -7,6 +7,10 @@ Because some of the files may be restricted by Diebold Nixdorf, this is for inte
 files that are needed in order to use this tool on matej.bludsky@gmail.com or matej.bludsky@dieboldnixdorf.com
 
 See documentation on how to import missing content
+##UPDATE
+Looks like SOAP UI doesnt require the WSDL files at all so this tool should work just fine without the WSDL folder mentioned above.
+
+
 
 # BugFixing tracker 
 If there is any bugs you will find, please report to 
@@ -25,7 +29,15 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.1-beta
+## LogWrapper 0.0.3-beta
+
+### What's new
+- Added support for TraceLog files
+- preview
+- SOAPUI export V02 version only
+- Bugfix
+
+
 
 ### Download 
 
