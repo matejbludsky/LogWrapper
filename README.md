@@ -29,9 +29,9 @@ Documentation can be found in the repository/HowTo
 
 ### What's new
 - Added support for TraceLog files
--- preview
--- SOAPUI export V02 version only
--Bugfix
+- preview
+- SOAPUI export V02 version only
+- Bugfix
 
 
 
