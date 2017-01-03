@@ -46,7 +46,7 @@ public class AboutMeFrame extends JFrame implements ILogWrapperUIRenderer, Windo
             Font header = new Font("TimesRoman", Font.PLAIN, 20);
 
             setPreferredSize(new Dimension(300, 170));
-
+            setTitle("About");
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             setLocation(new Point((int) screenSize.getWidth() / 2 - 150, (int) screenSize.getHeight() / 2 - 85));
 

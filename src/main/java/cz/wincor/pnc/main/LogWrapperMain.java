@@ -14,7 +14,6 @@ import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.importer.FileImporter;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.FileUtil;
-import cz.wincor.pnc.util.SystemUtil;
 
 public class LogWrapperMain implements Runnable {
 

@@ -1,5 +1,6 @@
 package cz.wincor.pnc.GUI;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -38,9 +39,9 @@ import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.export.SOAPUIExporter;
 import cz.wincor.pnc.settings.LogWrapperSettings;
-import cz.wincor.pnc.util.TraceStringUtils;
 import cz.wincor.pnc.util.ImageUtil;
 import cz.wincor.pnc.util.SystemUtil;
+import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
  * @author matej.bludsky
@@ -49,35 +50,20 @@ import cz.wincor.pnc.util.SystemUtil;
  * 
  */
 
-// TODO add endpoint URL default value from settings file
 public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    public static ExportJFrame instance = null;
     private static final Logger LOG = Logger.getLogger(ExportJFrame.class);
 
-    private JProgressBar progressBar = new JProgressBar();
+    private static JProgressBar progressBar = new JProgressBar();
 
     private JCheckBox WAS;
     private JCheckBox JBOSS;
 
-    /**
-     * Returns instance of SOAPUIConversionJFrame
-     * 
-     * @return
-     */
-    public static ExportJFrame getInstance() {
-        if (instance == null) {
-            instance = new ExportJFrame();
-        }
-        return instance;
-
-    }
-
-    private ExportJFrame() {
+    public ExportJFrame() {
         LOG.info("Starting SOAPUIConversionJFrame");
     }
 
@@ -242,7 +228,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                             });
                             FileNameExtensionFilter filter = new FileNameExtensionFilter("XML Files", "xml");
                             chooser.setFileFilter(filter);
-                            int returnVal = chooser.showOpenDialog(instance);
+                            int returnVal = chooser.showOpenDialog((Component)e.getSource());
                             if (returnVal == JFileChooser.APPROVE_OPTION) {
 
                                 if (chooser.getSelectedFile() == null) {
@@ -320,7 +306,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
             if (!savedFiles.isEmpty()) {
                 SystemUtil.openImagesLocation();
             } else {
-                JOptionPane.showMessageDialog(ExportJFrame.getInstance(), "No images found in the selected messages", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(progressBar, "No images found in the selected messages", "Warning", JOptionPane.WARNING_MESSAGE);
                 DragAndDropPanel.logToTextArea("No images found for export", true);
             }
         }
@@ -332,7 +318,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
      * @param value
      * @param increment
      */
-    public void updateProgress(int value, boolean increment) {
+    public static void updateProgress(int value, boolean increment) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 if (increment) {

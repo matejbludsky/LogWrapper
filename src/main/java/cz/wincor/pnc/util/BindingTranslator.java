@@ -90,7 +90,7 @@ public class BindingTranslator {
             CHECK_CASHING.getOperations().add(new Operation("CheckCashingFinalizeNextCashOutRequest", "FinalizeNextCashOut"));
             CHECK_CASHING.getOperations().add(new Operation("CheckCashingFinishValidationRequest", "FinishValidation"));
             CHECK_CASHING.getOperations().add(new Operation("CheckCashingInquireValidationStateRequest", "InquireValidationState"));
-            CHECK_CASHING.getOperations().add(new Operation("CheckCashingUpdateChecksRequest", "Updatechecks"));
+            CHECK_CASHING.getOperations().add(new Operation("CheckCashingUpdateChecksRequest", "UpdateChecks"));
             CHECK_CASHING.getOperations().add(new Operation("CheckCashingValidateChecksRequest", "ValidateChecks"));
 
             

@@ -153,7 +153,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    ExportJFrame.getInstance().renderUI();
+                    ExportJFrame export = new ExportJFrame();
+                    export.renderUI();
                 } catch (UIRenderException e1) {
                     LOG.error("Cannot render SOAPUIConversionJFrame");
                     DragAndDropPanel.logToTextArea("Cannot render SOAPUIConversionJFrame", true);
@@ -290,7 +291,6 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     prettyPrintMessageTextArea(keyID);
                     ImageUtil.saveImages();
                     LOG.debug("Row selected : " + keyID);
-                    DragAndDropPanel.logToTextArea("Row selected : " + keyID, true);
                 }
             }
         });
@@ -506,9 +506,18 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 setForeground(Color.BLACK);
                 break;
             case 5:
-                Message settings = MessageTypeManager.fromString((String) value);
-                setBackground(settings.getBackground());
-                setForeground(settings.getForeground());
+
+                String message = cache.get(resultTable.getModel().getValueAt(row, 7));
+
+                if (TraceStringUtils.isRequestMessage(message)) {
+                    Message settings = MessageTypeManager.fromString((String) value);
+                    setBackground(settings.getBackground());
+                    setForeground(settings.getForeground());
+                } else {
+                    // response
+                    setBackground(new Color(153, 255, 255));
+                    setForeground(Color.BLACK);
+                }
                 break;
 
             default:

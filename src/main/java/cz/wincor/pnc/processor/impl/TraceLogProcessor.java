@@ -9,11 +9,12 @@ import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.error.CommTraceProcessException;
 import cz.wincor.pnc.error.ProcessorException;
 import cz.wincor.pnc.processor.AbstractProcessor;
+import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
  * @author matej.bludsky
  * 
- * 
+ *         Processor class for trace files
  */
 
 public class TraceLogProcessor extends AbstractProcessor {
@@ -37,7 +38,7 @@ public class TraceLogProcessor extends AbstractProcessor {
         }
         try {
             LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getAbsolutePath(), true);
+            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getName(), true);
             int numberOfReadMessages = extractWSCCMesagesIntoFile();
             if (numberOfReadMessages == 0) {
                 DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
@@ -77,7 +78,7 @@ public class TraceLogProcessor extends AbstractProcessor {
                     // look for soap footer
                     if (currentLine.startsWith(WSCC_END_TAG)) {
                         if (isCompliant(WSCCMessage)) {
-                            writeToTmpFile(key + AbstractProcessor.SEPARATOR + WSCCMessage, getExtractedTmpFile());
+                            writeToTmpFile(key + AbstractProcessor.SEPARATOR + TraceStringUtils.appendSOAPEnvelope(WSCCMessage), getExtractedTmpFile());
                             messageCount++;
                         }
                         WSCCMessage = "";

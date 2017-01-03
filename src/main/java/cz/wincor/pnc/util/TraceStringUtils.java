@@ -23,6 +23,9 @@ public class TraceStringUtils {
 
     public static String[] importDateFormats = { "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd, HH:mm:ss.SSS" };
 
+    public static String SOAP_ENVELOPE_HEADER = "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body>";
+    public static String SOAP_ENVELOPE_FOOTER = "</soap:Body></soap:Envelope>";
+
     private static boolean isNull(String message) {
         if (message == null) {
             return true;
@@ -339,6 +342,25 @@ public class TraceStringUtils {
 
         LOG.debug("Row id : " + key + " InfoTransaction :  " + infoTransaction);
         return infoTransaction;
+    }
+
+    /**
+     * Appends
+     * 
+     * <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"> <soap:Body>
+     * CONTENT
+     * </soap:Body> </soap:Envelope>
+     * 
+     * @param message
+     * @return
+     */
+    public static String appendSOAPEnvelope(String message) {
+        if (message == null) {
+            return null;
+        }
+
+        String newMessage = SOAP_ENVELOPE_HEADER + message + SOAP_ENVELOPE_FOOTER;
+        return newMessage;
     }
 
 }

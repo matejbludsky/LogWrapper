@@ -45,7 +45,7 @@ public class SettingsPanel extends JPanel implements ILogWrapperUIRenderer, Acti
             setPreferredSize(new Dimension(LogWrapperUIJFrame.WIDTH, 150));
             BoxLayout layout = new BoxLayout(this, BoxLayout.X_AXIS);
             this.setLayout(layout);
-
+            
             add(renderLeftPanel());
             add(renderRightPanel());
             LOG.debug("Drag and Drop panel rendered");

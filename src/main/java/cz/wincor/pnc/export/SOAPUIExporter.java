@@ -58,7 +58,7 @@ public class SOAPUIExporter implements Runnable {
     public void run() {
         try {
             process();
-            ExportJFrame.getInstance().updateProgress(100, false);
+            ExportJFrame.updateProgress(100, false);
         } catch (ProcessorException e) {
             LOG.error(e.getMessage());
             DragAndDropPanel.logToTextArea(e.getMessage(), true);
@@ -109,7 +109,7 @@ public class SOAPUIExporter implements Runnable {
         template = replaceTestSuiteName(template, templateName);
         template = replaceWSDLPaths(template, finalFilePath + "/WSDL/V02");
         template = replaceUUID(template);
-        ExportJFrame.getInstance().updateProgress(25, false);
+        ExportJFrame.updateProgress(25, false);
         template = replaceTestSteps(template, prepareTestSteps());
 
         if (LogWrapperSettings.SOAP_CLEAR_BEFORE) {
@@ -154,7 +154,7 @@ public class SOAPUIExporter implements Runnable {
 
                 suites.append(template);
                 suites.append(System.lineSeparator());
-                ExportJFrame.getInstance().updateProgress(increment, true);
+                ExportJFrame.updateProgress(increment, true);
                 LOG.debug("Test Suite created : " + template);
             } catch (SOAPUITransformationException e) {
                 LOG.error(e.getMessage());

@@ -3,7 +3,6 @@ package cz.wincor.pnc.GUI;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -18,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -43,7 +43,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
     public static int WIDTH = 500;
     public static int HEIGHT = 590;
 
-    private Panel mainPanel;
+    private JPanel mainPanel;
     /**
      * 
      */
@@ -64,7 +64,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
 
     private LogWrapperUIJFrame() {
         LOG.info("Starting LogWrapperUIJFrame");
-        mainPanel = new Panel();
+        mainPanel = new JPanel();
     }
 
     /**
