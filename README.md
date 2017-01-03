@@ -1,6 +1,7 @@
 # LogWrapper
-Application for CommTrace log analysis plus export to SOAP UI
-Supported PCE version 2.4x
+Application for CommTrace and TraceLog analysis plus export to SOAP UI and image extract.
+WSCC V02 partial support, see how to document.
+
 
 #WARNING
 Because some of the files may be restricted by Diebold Nixdorf, this is for internal use only, please ask me for additional 
@@ -29,7 +30,7 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.3-beta
+## LogWrapper 0.0.4-beta
 
 ### What's new
 - Added support for TraceLog files
@@ -41,8 +42,8 @@ Documentation can be found in the repository/HowTo
 
 ### Download 
 
-####0.0.3-beta
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.3-beta/logwrapper-0.0.3-beta-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.3-beta.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.3-beta.tar.gz]
+####0.0.4-beta
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.4-beta/logwrapper-0.0.4-beta-dist.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.4-beta.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.4-beta.tar.gz]
 
