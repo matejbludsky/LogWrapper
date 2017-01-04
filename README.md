@@ -30,7 +30,7 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.4-beta
+## LogWrapper 0.0.5
 
 ### What's new
 - Added support for TraceLog files
