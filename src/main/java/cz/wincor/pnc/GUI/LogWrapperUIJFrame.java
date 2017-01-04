@@ -1,8 +1,9 @@
 package cz.wincor.pnc.GUI;
 
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -11,9 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -41,7 +44,9 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
 
     private static final Logger LOG = Logger.getLogger(LogWrapperUIJFrame.class);
     public static int WIDTH = 500;
-    public static int HEIGHT = 590;
+    public static int HEIGHT = 676;
+
+    private JLabel systemDetails = new JLabel();
 
     private JPanel mainPanel;
     /**
@@ -64,7 +69,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
 
     private LogWrapperUIJFrame() {
         LOG.info("Starting LogWrapperUIJFrame");
-        mainPanel = new JPanel();
+
     }
 
     /**
@@ -142,13 +147,10 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
 
             setJMenuBar(menu);
 
-            setLayout(new BorderLayout());
-
             renderMainPanel();
             getContentPane().add(mainPanel);
             pack();
-            
-            repaint();
+
             setVisible(true);
         } catch (Exception e) {
             LOG.error("Cannot render LogWrapperUIJFrame", e);
@@ -162,17 +164,26 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
      * @throws UIRenderException
      */
     private void renderMainPanel() throws UIRenderException {
+        mainPanel = new JPanel();
         SettingsPanel settingsPanel = new SettingsPanel();
         DragAndDropPanel dragAndDropPanel = DragAndDropPanel.getInstance();
 
-        BoxLayout settingsLayout = new BoxLayout(settingsPanel, BoxLayout.Y_AXIS);
-        BoxLayout dragAndDroLayout = new BoxLayout(dragAndDropPanel, BoxLayout.Y_AXIS);
+        BoxLayout layout = new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS);
 
         settingsPanel.renderUI();
         dragAndDropPanel.renderUI();
 
-        mainPanel.add(settingsPanel, settingsLayout);
-        mainPanel.add(dragAndDropPanel, dragAndDroLayout);
+        JPanel systemPanel = new JPanel();
+        systemPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Monitoring"), BorderFactory.createEmptyBorder(0, 10, 0, 10)));
+
+        systemDetails.setForeground(Color.RED);
+
+        systemPanel.setPreferredSize(new Dimension(WIDTH, 50));
+        systemPanel.add(systemDetails);
+
+        mainPanel.add(settingsPanel);
+        mainPanel.add(systemPanel);
+        mainPanel.add(dragAndDropPanel);
 
     }
 
@@ -231,4 +242,12 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
         setVisible(true);
     }
 
+    public synchronized void refreshSystemDetails(String details) {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                systemDetails.setText(details);
+            }
+        });
+    }
 }

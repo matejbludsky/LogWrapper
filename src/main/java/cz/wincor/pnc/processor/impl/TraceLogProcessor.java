@@ -1,13 +1,16 @@
 package cz.wincor.pnc.processor.impl;
 
 import java.io.File;
-import java.util.Scanner;
+import java.io.IOException;
+import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.error.CommTraceProcessException;
 import cz.wincor.pnc.error.ProcessorException;
+import cz.wincor.pnc.error.TraceLoadingException;
 import cz.wincor.pnc.processor.AbstractProcessor;
 import cz.wincor.pnc.util.TraceStringUtils;
 
@@ -23,8 +26,6 @@ public class TraceLogProcessor extends AbstractProcessor {
     public static final String WSCC_START_TAG = "<ns2:";
     public static final String WSCC_END_TAG = "</ns2:";
 
-    public static final String KEY_TAG = "[TRACE]";
-
     public TraceLogProcessor(File originalLogFile) {
         super(originalLogFile);
         LOG.info("Starting TraceLogProcessor");
@@ -34,11 +35,11 @@ public class TraceLogProcessor extends AbstractProcessor {
     public void process() throws ProcessorException {
         if (originalLogFile == null) {
             // TODO replace me with TraceLogException
-            throw new CommTraceProcessException("Log File cannot be null");
+            throw new TraceLoadingException("Log File cannot be null");
         }
         try {
             LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getName(), true);
+            DragAndDropPanel.logToTextArea("Extracting file : " + originalLogFile.getName(), true);
             int numberOfReadMessages = extractWSCCMesagesIntoFile();
             if (numberOfReadMessages == 0) {
                 DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
@@ -52,25 +53,20 @@ public class TraceLogProcessor extends AbstractProcessor {
 
     /**
      * s Method is going to filter WSCC messages from the merged log file
+     * 
+     * @throws IOException
      */
-    private int extractWSCCMesagesIntoFile() {
+    private int extractWSCCMesagesIntoFile() throws IOException {
 
-        Scanner scan = null;
-        String currentLine = null;
         String WSCCMessage = "";
         int messageCount = 0;
         boolean activeMessage = false;
-        String key = "";
-
+        StringBuilder messages = new StringBuilder();
+        LineIterator it;
+        it = FileUtils.lineIterator(originalLogFile, "UTF-8");
         try {
-            scan = new Scanner(originalLogFile);
-            while (scan.hasNextLine()) {
-                currentLine = scan.nextLine();
-
-                if (currentLine.startsWith(KEY_TAG)) {
-                    key = currentLine.substring(KEY_TAG.length(), 33).trim();
-                }
-
+            while (it.hasNext()) {
+                String currentLine = it.nextLine();
                 if (currentLine.startsWith(WSCC_START_TAG) || activeMessage) {
                     activeMessage = true;
                     WSCCMessage += currentLine;
@@ -78,7 +74,9 @@ public class TraceLogProcessor extends AbstractProcessor {
                     // look for soap footer
                     if (currentLine.startsWith(WSCC_END_TAG)) {
                         if (isCompliant(WSCCMessage)) {
-                            writeToTmpFile(key + AbstractProcessor.SEPARATOR + TraceStringUtils.appendSOAPEnvelope(WSCCMessage), getExtractedTmpFile());
+                            String key = UUID.randomUUID().toString();
+
+                            messages.append(key + AbstractProcessor.SEPARATOR + TraceStringUtils.appendSOAPEnvelope(WSCCMessage));
                             messageCount++;
                         }
                         WSCCMessage = "";
@@ -87,20 +85,13 @@ public class TraceLogProcessor extends AbstractProcessor {
                 }
             }
 
-        } catch (Exception e) {
-            LOG.error("Cannot import file", e);
+            writeToTmpFile(messages, getExtractedTmpFile());
+
         } finally {
-            try {
-                if (scan != null) {
-                    scan.close();
-                }
-            } catch (Exception e2) {
-                LOG.error("Cannot close resource", e2);
-            }
+            LineIterator.closeQuietly(it);
+            LOG.info("Cache Prepared");
         }
 
         return messageCount;
-
     }
-
 }

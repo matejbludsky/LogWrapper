@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,9 +30,12 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.SwingWorker.StateValue;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.TableModel;
 
 import org.apache.log4j.Logger;
 
@@ -63,8 +68,11 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
     private JCheckBox WAS;
     private JCheckBox JBOSS;
 
-    public ExportJFrame() {
+    private TableModel model;
+
+    public ExportJFrame(TableModel model) {
         LOG.info("Starting SOAPUIConversionJFrame");
+        this.model = model;
     }
 
     @Override
@@ -199,13 +207,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
             public void actionPerformed(ActionEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        updateProgress(0, false);
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e2) {
-                            // TODO Auto-generated catch block
-                            e2.printStackTrace();
-                        }
+
                         String filePath = null;
                         /* if soapui.project.location set do not display file chooser */
                         if (LogWrapperSettings.SOAPUI_FINAL_LOCATION.isEmpty()) {
@@ -228,7 +230,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                             });
                             FileNameExtensionFilter filter = new FileNameExtensionFilter("XML Files", "xml");
                             chooser.setFileFilter(filter);
-                            int returnVal = chooser.showOpenDialog((Component)e.getSource());
+                            int returnVal = chooser.showOpenDialog((Component) e.getSource());
                             if (returnVal == JFileChooser.APPROVE_OPTION) {
 
                                 if (chooser.getSelectedFile() == null) {
@@ -241,14 +243,30 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                         }
 
                         LOG.debug("Using final path for soap ui :" + filePath);
-                        LOG.debug("loading cache");
-                        // load cache from table
                         List<String> messagesCache = prepareCacheForSoapUIProcessor();
-                        // transform to soap ui
 
-                        Thread thread = new Thread(new SOAPUIExporter(messagesCache));
-                        thread.start();
-                        SystemUtil.openSoapUIFinalLocation();
+                        SOAPUIExporter worker = new SOAPUIExporter(messagesCache, filePath);
+                        worker.addPropertyChangeListener(new PropertyChangeListener() {
+
+                            @Override
+                            public void propertyChange(PropertyChangeEvent evt) {
+                                switch (evt.getPropertyName()) {
+                                case "progress":
+                                    int progress = (Integer) evt.getNewValue();
+                                    updateProgress(progress, false);
+                                    break;
+                                case "state":
+                                    switch ((StateValue) evt.getNewValue()) {
+                                    case DONE:
+                                        SystemUtil.openSoapUIFinalLocation();
+                                        break;
+                                    }
+                                    break;
+                                }
+                            }
+                        });
+                        worker.execute();
+
                     }
                 });
             }
@@ -262,9 +280,20 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
             public void actionPerformed(ActionEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        updateProgress(0, false);
-                        Thread thread = new Thread(new ImageThread());
-                        thread.start();
+                        ImageWorker worker = new ImageWorker();
+                        worker.addPropertyChangeListener(new PropertyChangeListener() {
+
+                            @Override
+                            public void propertyChange(PropertyChangeEvent evt) {
+                                switch (evt.getPropertyName()) {
+                                case "progress":
+                                    int progress = (Integer) evt.getNewValue();
+                                    updateProgress(progress, false);
+                                    break;
+                                }
+                            }
+                        });
+                        worker.execute();
                     }
                 });
             }
@@ -281,35 +310,35 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
      * @author matej.bludsky
      *
      */
-    public class ImageThread implements Runnable {
+    public class ImageWorker extends SwingWorker<Boolean, String> {
 
         @Override
-        public void run() {
+        protected Boolean doInBackground() throws Exception {
             List<String> messages = new ArrayList<>();
             List<String> savedFiles = new ArrayList<>();
-            for (int row = 0; row < DataCache.getInstance().getTable().getModel().getRowCount(); row++) {
-                if ((boolean) DataCache.getInstance().getTable().getModel().getValueAt(row, 0)) {
-                    String message = DataCache.getInstance().getCache().get(DataCache.getInstance().getTable().getModel().getValueAt(row, 7));
+            for (int row = 0; row < model.getRowCount(); row++) {
+                if ((boolean) model.getValueAt(row, 0)) {
+                    String message = DataCache.getInstance().getCache().get(model.getValueAt(row, 7));
                     messages.add(message);
                 }
             }
-            int increment = 100;
-            if (messages.size() != 0) {
-                increment = 100 / messages.size();
-            }
-
+            int progress = 0;
             for (String message : messages) {
                 savedFiles.addAll(ImageUtil.saveImagesToFile(message));
-                updateProgress(increment, true);
+                progress = progress + 100 / messages.size();
+                setProgress(progress);
             }
-            updateProgress(100, false);
             if (!savedFiles.isEmpty()) {
                 SystemUtil.openImagesLocation();
             } else {
                 JOptionPane.showMessageDialog(progressBar, "No images found in the selected messages", "Warning", JOptionPane.WARNING_MESSAGE);
                 DragAndDropPanel.logToTextArea("No images found for export", true);
             }
+            setProgress(100);
+
+            return true;
         }
+
     }
 
     /**
@@ -340,9 +369,9 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
         List<String> tmpCache = new ArrayList<String>();
         List<String> messagesCache = new ArrayList<String>();
 
-        for (int row = 0; row < DataCache.getInstance().getTable().getModel().getRowCount(); row++) {
-            if ((boolean) DataCache.getInstance().getTable().getModel().getValueAt(row, 0)) {
-                tmpCache.add(DataCache.getInstance().getTable().getModel().getValueAt(row, 7).toString() + "&" + DataCache.getInstance().getCache().get(DataCache.getInstance().getTable().getModel().getValueAt(row, 7).toString()));
+        for (int row = 0; row < model.getRowCount(); row++) {
+            if ((boolean) model.getValueAt(row, 0)) {
+                tmpCache.add(model.getValueAt(row, 7).toString() + "&" + DataCache.getInstance().getCache().get(model.getValueAt(row, 7).toString()));
             }
         }
 

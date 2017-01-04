@@ -1,12 +1,15 @@
 package cz.wincor.pnc.processor.impl;
 
 import java.io.File;
-import java.util.Scanner;
+import java.io.IOException;
+import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.error.CommTraceProcessException;
+import cz.wincor.pnc.error.TraceLoadingException;
 import cz.wincor.pnc.processor.AbstractProcessor;
 import cz.wincor.pnc.util.TraceStringUtils;
 
@@ -35,18 +38,19 @@ public class CommTraceProcessor extends AbstractProcessor {
      * Method is going to analyze each line and extract only requests SOAP messages
      */
     @Override
-    public void process() throws CommTraceProcessException {
+    public void process() throws TraceLoadingException {
         if (originalLogFile == null) {
-            throw new CommTraceProcessException("Log File cannot be null");
+            throw new TraceLoadingException("Log File cannot be null");
         }
         try {
             LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.logToTextArea("Extracting WSCC Messages from file : " + originalLogFile.getName(), true);
+            DragAndDropPanel.logToTextArea("Extracting file : " + originalLogFile.getName(), true);
             int numberOfReadMessages = readWSCCRequestsIntoTmpFile();
             if (numberOfReadMessages == 0) {
                 DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
                 return;
             }
+            
         } catch (Exception e) {
             LOG.error("Cannot extract comm trace " + originalLogFile.getAbsolutePath(), e);
         }
@@ -54,30 +58,33 @@ public class CommTraceProcessor extends AbstractProcessor {
 
     /**
      * s Method is going to filter WSCC messages from the merged log file
+     * 
+     * @throws IOException
      */
-    private int readWSCCRequestsIntoTmpFile() {
+    private int readWSCCRequestsIntoTmpFile() throws IOException {
 
-        Scanner scan = null;
-        String currentLine = null;
         String WSCCMessage = null;
         int messageCount = 0;
         boolean activeMessage = false;
 
+        StringBuilder messages = new StringBuilder();
+        
+        LineIterator it;
+        it = FileUtils.lineIterator(originalLogFile, "UTF-8");
         try {
-            scan = new Scanner(originalLogFile);
-            while (scan.hasNextLine()) {
-                currentLine = scan.nextLine();
-
+            while (it.hasNext()) {
+                String currentLine = it.nextLine();
                 if (currentLine.startsWith(WSCC_TAG) || activeMessage) {
                     activeMessage = true;
                     WSCCMessage += currentLine;
                     // WSCC entry
                     // look for soap footer
-                    if (findSubstring(SOAP_FOOTER[0].toLowerCase(), currentLine.toLowerCase()) || findSubstring(SOAP_FOOTER[1].toLowerCase(), currentLine.toLowerCase())) {
-                        String key = WSCCMessage.substring(WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length(), WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length() + 23);
+                    if (isSOAPFooter(WSCCMessage)) {
+                        String key = UUID.randomUUID().toString();
                         String message = filterSOAPMessage(WSCCMessage);
                         if (TraceStringUtils.isWSCCMessage(message) && isCompliant(message)) {
-                            writeToTmpFile(key + AbstractProcessor.SEPARATOR + message, getExtractedTmpFile());
+                            messages.append(key + AbstractProcessor.SEPARATOR + message+System.lineSeparator());
+                            
                             messageCount++;
                         }
                         WSCCMessage = "";
@@ -85,17 +92,15 @@ public class CommTraceProcessor extends AbstractProcessor {
                     }
                 }
             }
-
-        } catch (Exception e) {
-            LOG.error("Cannot import file", e);
+            
+            writeToTmpFile(messages, getExtractedTmpFile());
+            
         } finally {
-            try {
-                if (scan != null) {
-                    scan.close();
-                }
-            } catch (Exception e2) {
-                LOG.error("Cannot close resource", e2);
-            }
+            LineIterator.closeQuietly(it);
+            
+            
+            
+            LOG.info("Cache Prepared");
         }
 
         return messageCount;

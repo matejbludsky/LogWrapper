@@ -144,10 +144,10 @@ public class TraceStringUtils {
         }
         String atmId = "-";
         try {
-            int startTag = message.indexOf("<ClientId>");
             int endTag = message.indexOf("</ClientId>");
+            int startTag = message.substring(0, endTag).lastIndexOf(">");
 
-            atmId = message.substring(startTag + 10, endTag);
+            atmId = message.substring(startTag+1, endTag);
             LOG.debug("Extracted ATM ID " + atmId);
         } catch (Exception e) {
             LOG.error("Cannot extract ATM ID");
@@ -329,12 +329,16 @@ public class TraceStringUtils {
      * 
      * @param message
      */
-    public static boolean isInfoTransaction(String key, String message) {
+    public static boolean isInfoTransaction(String key, String message, String name) {
         if (isNull(message)) {
             return false;
         }
 
         boolean infoTransaction = false;
+
+        if (name.toLowerCase().contains("response")) {
+            return false;
+        }
 
         if (message.toLowerCase().contains("response")) {
             return true;
@@ -347,9 +351,8 @@ public class TraceStringUtils {
     /**
      * Appends
      * 
-     * <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"> <soap:Body>
-     * CONTENT
-     * </soap:Body> </soap:Envelope>
+     * <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"> <soap:Body> CONTENT </soap:Body>
+     * </soap:Envelope>
      * 
      * @param message
      * @return

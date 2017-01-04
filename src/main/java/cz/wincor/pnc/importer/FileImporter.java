@@ -1,5 +1,7 @@
 package cz.wincor.pnc.importer;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,13 +10,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.SwingWorker;
+
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.GUI.MessagesReviewJFrame;
+import cz.wincor.pnc.cache.DataCache;
 import cz.wincor.pnc.common.IFileImporter;
 import cz.wincor.pnc.error.FileImportException;
-import cz.wincor.pnc.error.ProcessorException;
+import cz.wincor.pnc.error.TraceLoadingException;
 import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.processor.AbstractProcessor;
 import cz.wincor.pnc.processor.PCELogType;
@@ -51,48 +56,22 @@ public class FileImporter implements IFileImporter {
      */
     @Override
     public void importFiles(List<File> files) throws FileImportException {
-        List<File> supported = new ArrayList<File>();
-        List<File> unsupported = new ArrayList<File>(files);
-        try {
-            FileUtil.clearDirectory(LogWrapperSettings.TMP_LOCATION);
 
-            for (File droppedFile : files) {
-                DragAndDropPanel.logArea.setText("");
-                LOG.info("Importing dropped file : " + droppedFile.getAbsolutePath());
+        ImportFileWorker worker = new ImportFileWorker(files);
+        worker.addPropertyChangeListener(new PropertyChangeListener() {
 
-                Files.walk(droppedFile.toPath()).forEach(path -> isSupported(path.toFile(), supported));
-                /**
-                 * Process Files
-                 **/
-                LOG.debug("Processing files : " + supported.toString());
-                DragAndDropPanel.renderTextAreaLogFiles(supported, true);
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                switch (evt.getPropertyName()) {
+                case "progress":
+                    int progress = (Integer) evt.getNewValue();
+                    DragAndDropPanel.updateProgress(progress, false);
+                    break;
+                }
             }
+        });
 
-            // create log items
-            for (File log : supported) {
-                PCEServerLog serverLog = new PCEServerLog(log, PCELogType.fromFileName(log.getName()));
-                AbstractProcessor processor = ProcessorFactory.getInstance().getProcessor(serverLog);
-                processor.process();
-            }
-
-            unsupported.removeAll(supported);
-            DragAndDropPanel.renderTextAreaLogFiles(unsupported, false);
-            // load MessageReviewFrame
-
-            if (!supported.isEmpty()) {
-                FileUtil.mergeExtractedTmpFiles();
-
-                MessagesReviewJFrame preview = new MessagesReviewJFrame();
-                preview.renderUI(AbstractProcessor.loadExtractedData());
-            }
-
-        } catch (IOException e) {
-            LOG.error("Cannot import files ", e);
-        } catch (ProcessorException e) {
-            LOG.error("Cannot process file ", e);
-        } catch (UIRenderException e) {
-            LOG.error("Cannot render MessagesReviewJFrame ", e);
-        }
+        worker.execute();
     }
 
     /**
@@ -111,11 +90,90 @@ public class FileImporter implements IFileImporter {
 
         if (supportedExtensions.contains(fileExtension)) {
             LOG.debug("SUPPORTED file " + f.getAbsolutePath());
-            supported.add(f);
+
+            PCELogType type = PCELogType.fromFileName(fileName);
+            switch (type) {
+            case UNSUPPORTED:
+                LOG.debug("Unsupported file : " + fileName);
+                break;
+
+            default:
+                supported.add(f);
+                break;
+            }
+
         } else {
             LOG.debug("NOT supported file " + f.getAbsolutePath());
         }
 
+    }
+
+    public class ImportFileWorker extends SwingWorker<Boolean, String> {
+
+        private List<File> importFiles = new ArrayList<File>();
+
+        public ImportFileWorker(List<File> importFiles) {
+            super();
+            this.importFiles = importFiles;
+        }
+
+        @Override
+        protected Boolean doInBackground() throws Exception {
+
+            List<File> supported = new ArrayList<File>();
+            List<File> unsupported = new ArrayList<File>(importFiles);
+            try {
+                FileUtil.clearDirectory(LogWrapperSettings.TMP_LOCATION);
+
+                for (File droppedFile : importFiles) {
+                    DragAndDropPanel.clearTextArea();
+                    LOG.info("Importing dropped file : " + droppedFile.getAbsolutePath());
+
+                    Files.walk(droppedFile.toPath()).forEach(path -> isSupported(path.toFile(), supported));
+                    /**
+                     * Process Files
+                     **/
+                    LOG.debug("Processing files : " + supported.toString());
+
+                }
+                DragAndDropPanel.renderTextAreaLogFiles(supported, true);
+                DragAndDropPanel.resetProgressBar();
+                setProgress(15);
+                int updateValue = 0;
+                // create log items
+                for (File log : supported) {
+                    PCEServerLog serverLog = new PCEServerLog(log, PCELogType.fromFileName(log.getName()));
+                    AbstractProcessor processor = ProcessorFactory.getInstance().getProcessor(serverLog);
+                    processor.process();
+                    updateValue = updateValue + (85 / supported.size());
+                    setProgress(updateValue);
+                    serverLog = null;
+                    processor = null;
+                }
+
+                unsupported.removeAll(supported);
+                // load MessageReviewFrame
+                if (!supported.isEmpty()) {
+                    FileUtil.mergeExtractedTmpFiles();
+                    DataCache.getInstance().initializeCache();
+                    MessagesReviewJFrame preview = new MessagesReviewJFrame();
+                    preview.renderUI();
+                } else {
+                    DragAndDropPanel.renderTextAreaLogFiles(unsupported, false);
+                }
+                setProgress(100);
+                System.gc();
+
+            } catch (IOException e) {
+                LOG.error("Cannot import files ", e);
+            } catch (TraceLoadingException e) {
+                LOG.error("Cannot load trace files ", e);
+            } catch (UIRenderException e) {
+                LOG.error("Cannot render MessagesReviewJFrame ", e);
+            }
+
+            return true;
+        }
     }
 
 }

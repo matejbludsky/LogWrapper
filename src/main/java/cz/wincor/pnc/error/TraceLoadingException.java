@@ -6,7 +6,7 @@ package cz.wincor.pnc.error;
  *
  *         Exception for errors while processing CommTrace files
  */
-public class CommTraceProcessException extends ProcessorException {
+public class TraceLoadingException extends ProcessorException {
 
     /**
      * 
@@ -14,7 +14,7 @@ public class CommTraceProcessException extends ProcessorException {
     private static final long serialVersionUID = 1L;
     private String message = null;
 
-    public CommTraceProcessException(String message) {
+    public TraceLoadingException(String message) {
         super();
         this.message = message;
     }

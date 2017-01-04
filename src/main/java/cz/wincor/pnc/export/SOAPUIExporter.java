@@ -10,20 +10,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.swing.SwingWorker;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.GUI.ExportJFrame;
 import cz.wincor.pnc.error.ProcessorException;
 import cz.wincor.pnc.error.SOAPUITransformationException;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.BindingTranslator;
 import cz.wincor.pnc.util.BindingTranslator.BindingType;
 import cz.wincor.pnc.util.BindingTranslator.EndPointType;
-import cz.wincor.pnc.util.TraceStringUtils;
 import cz.wincor.pnc.util.FileUtil;
 import cz.wincor.pnc.util.SystemUtil;
+import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
  * @author matej.bludsky
@@ -31,7 +31,7 @@ import cz.wincor.pnc.util.SystemUtil;
  *         Class for SOAP UI transformation running as thread
  */
 
-public class SOAPUIExporter implements Runnable {
+public class SOAPUIExporter extends SwingWorker<Boolean, String> {
     private static final Logger LOG = Logger.getLogger(SOAPUIExporter.class);
 
     public static String V02_WSDL_LOCATION = "$V02_WSDL_LOCATION$";
@@ -46,22 +46,15 @@ public class SOAPUIExporter implements Runnable {
     public static String UUID_REQUEST = "$UUID$";
     public static String ENDPOINT = "$ENDPOINT$";
     public static String TEST_STEP_NAME = "$TEST_STEP_NAME$";
+    private List<String> cache = new ArrayList<String>();
 
-    private List<String> cache = new ArrayList();
+    private String finalFilePath = LogWrapperSettings.normalizeDir(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
 
-    public SOAPUIExporter(List<String> cache) {
+    public SOAPUIExporter(List<String> cache, String finalPath) {
         super();
         this.cache = cache;
-    }
-
-    @Override
-    public void run() {
-        try {
-            process();
-            ExportJFrame.updateProgress(100, false);
-        } catch (ProcessorException e) {
-            LOG.error(e.getMessage());
-            DragAndDropPanel.logToTextArea(e.getMessage(), true);
+        if (finalPath != null) {
+            this.finalFilePath = finalPath;
         }
     }
 
@@ -71,9 +64,9 @@ public class SOAPUIExporter implements Runnable {
      */
     public void process() throws ProcessorException {
         try {
-            prepareSoapUITemplate();
+            doInBackground();
         } catch (Exception e) {
-            LOG.error(e);
+            LOG.error("Cannot finish soapui export", e);
             throw new SOAPUITransformationException("Cannot trasform to SOAP UI");
         }
     }
@@ -100,8 +93,7 @@ public class SOAPUIExporter implements Runnable {
      */
     private void prepareSoapUITemplate() throws IOException {
 
-        String finalFilePath = LogWrapperSettings.normalizeDir(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
-
+        setProgress(0);
         String templateName = "LogWrapper_" + UUID.randomUUID().toString().substring(0, 5) + "_" + loadEndPointType();
 
         String template = loadProjectTemplate();
@@ -109,17 +101,20 @@ public class SOAPUIExporter implements Runnable {
         template = replaceTestSuiteName(template, templateName);
         template = replaceWSDLPaths(template, finalFilePath + "/WSDL/V02");
         template = replaceUUID(template);
-        ExportJFrame.updateProgress(25, false);
+        setProgress(25);
         template = replaceTestSteps(template, prepareTestSteps());
 
         if (LogWrapperSettings.SOAP_CLEAR_BEFORE) {
-            FileUtil.clearDirectory(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
+            FileUtil.clearDirectory(finalFilePath);
         }
+        Files.createDirectories(Paths.get(finalFilePath).getParent());
 
         copyFiles(finalFilePath);
         writeTemplate(template, finalFilePath, templateName + ".xml");
 
         LOG.info("Transformed SOAPUI template written to : " + finalFilePath);
+        setProgress(100);
+
     }
 
     /**
@@ -130,7 +125,7 @@ public class SOAPUIExporter implements Runnable {
      */
     private String prepareTestSteps() throws IOException {
 
-        int increment = 75 / cache.size();
+        int progress = 0;
 
         StringBuilder suites = new StringBuilder();
         // for each message create test suite
@@ -154,7 +149,10 @@ public class SOAPUIExporter implements Runnable {
 
                 suites.append(template);
                 suites.append(System.lineSeparator());
-                ExportJFrame.updateProgress(increment, true);
+
+                progress = progress + 75 / cache.size();
+
+                setProgress(progress);
                 LOG.debug("Test Suite created : " + template);
             } catch (SOAPUITransformationException e) {
                 LOG.error(e.getMessage());
@@ -281,6 +279,12 @@ public class SOAPUIExporter implements Runnable {
 
     private String replaceWSDLPaths(String template, String path) {
         return template = template.replace(V02_WSDL_LOCATION, path);
+    }
+
+    @Override
+    protected Boolean doInBackground() throws Exception {
+        prepareSoapUITemplate();
+        return true;
     }
 
 }

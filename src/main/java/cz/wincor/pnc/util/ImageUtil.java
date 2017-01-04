@@ -9,7 +9,6 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.GUI.MessagesReviewJFrame;
 import cz.wincor.pnc.cache.DataCache;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
@@ -62,11 +61,10 @@ public class ImageUtil {
     /**
      * finds <Image> tag and converts base64 data into image as html
      */
-    public static void saveImages() {
+    public static void saveImages(String keyID) {
         if (LogWrapperSettings.IMAGES_SAVE) {
             LOG.debug("Analysing preview area");
             // transform check base64 image to file
-            String keyID = DataCache.getInstance().getTable().getValueAt(DataCache.getInstance().getTable().getSelectedRow(), 7).toString();
             List<String> imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID));
 
             for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {

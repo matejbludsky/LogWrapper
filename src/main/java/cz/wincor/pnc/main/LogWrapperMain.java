@@ -2,8 +2,12 @@ package cz.wincor.pnc.main;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
@@ -14,6 +18,7 @@ import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.importer.FileImporter;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.FileUtil;
+import cz.wincor.pnc.util.SystemMonitoringThread;
 
 public class LogWrapperMain implements Runnable {
 
@@ -30,7 +35,7 @@ public class LogWrapperMain implements Runnable {
             cleanENV();
             processArguments(args);
         } catch (Exception e1) {
-            LOG.error(e1.toString());
+            LOG.error(e1);
         }
 
     }
@@ -40,12 +45,20 @@ public class LogWrapperMain implements Runnable {
         LOG.info("::Starting LogWapper::");
         LOG.info("::Displaing main JFrame::");
         LogWrapperSettings.loadSettings();
-        LogWrapperUIJFrame mainFrame = LogWrapperUIJFrame.getInstance();
-        try {
-            mainFrame.renderUI(null);
-        } catch (UIRenderException e) {
-            LOG.error(e.toString());
-        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                LogWrapperUIJFrame mainFrame = LogWrapperUIJFrame.getInstance();
+                try {
+                    mainFrame.renderUI(null);
+                    SystemMonitoringThread monitoring = new SystemMonitoringThread();
+                    monitoring.start();
+                } catch (UIRenderException e) {
+                    LOG.error(e.toString());
+                }
+            }
+        });
 
     }
 
@@ -58,6 +71,8 @@ public class LogWrapperMain implements Runnable {
         if (LogWrapperSettings.IMAGES_CLEAR_ON_START) {
             FileUtil.clearDirectory(LogWrapperSettings.IMAGES_LOCATION);
         }
+
+        Files.createDirectories(Paths.get(LogWrapperSettings.IMAGES_LOCATION).getParent());
 
     }
 

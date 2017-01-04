@@ -45,7 +45,7 @@ public class SettingsPanel extends JPanel implements ILogWrapperUIRenderer, Acti
             setPreferredSize(new Dimension(LogWrapperUIJFrame.WIDTH, 150));
             BoxLayout layout = new BoxLayout(this, BoxLayout.X_AXIS);
             this.setLayout(layout);
-            
+
             add(renderLeftPanel());
             add(renderRightPanel());
             LOG.debug("Drag and Drop panel rendered");
@@ -72,7 +72,7 @@ public class SettingsPanel extends JPanel implements ILogWrapperUIRenderer, Acti
         left.add(getWorkstationChangeEvents(), layout);
         left.add(getCassCounters(), layout);
 
-        left.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Include"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+        left.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Include"), BorderFactory.createEmptyBorder(0, 10, 0, 10)));
 
         return left;
     }
@@ -89,7 +89,7 @@ public class SettingsPanel extends JPanel implements ILogWrapperUIRenderer, Acti
 
         GridLayout layout = new GridLayout(4, 1);
         right.add(getATMIDSelector(), layout);
-        right.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Filter"), BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+        right.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Filter"), BorderFactory.createEmptyBorder(0, 10, 0, 10)));
 
         return right;
     }

@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -12,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.font.TextAttribute;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -30,8 +32,6 @@ import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -64,7 +64,6 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     private static final Logger LOG = Logger.getLogger(MessagesReviewJFrame.class);
 
     private String[] columnNames = { "Included", "SEQNumber", "ServerTimeID", "ATMTime", "ATMID", "MessageName", "InfoTransaction", "ID" };
-    private Map<String, String> cache;
 
     private JTable resultTable;
     private JTextPane dataPreview;
@@ -81,17 +80,10 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     @SuppressWarnings("unchecked")
     @Override
     public void renderUI(Object... parameters) throws UIRenderException {
-        if (parameters == null || parameters[0] == null) {
-            LOG.error("No results to display");
-            setVisible(false);
-            throw new UIRenderException("No Results to display");
-        }
-
         try {
 
             addMenu();
             setTitle("Message Review");
-            cache = (Map<String, String>) parameters[0];
             setPreferredSize(new Dimension(1300, 800));
             setDefaultLookAndFeelDecorated(true);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -108,9 +100,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             JScrollPane scrollPane = new JScrollPane(resultTable);
 
-            loadContentFromCache(cache);
-            DataCache.getInstance().setTable(resultTable);
-            DataCache.getInstance().setCache(cache);
+            loadContentFromCache(DataCache.getInstance().getCache());
 
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollPane, sp);
             split.setDividerLocation(400);
@@ -153,7 +143,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    ExportJFrame export = new ExportJFrame();
+                    ExportJFrame export = new ExportJFrame(resultTable.getModel());
                     export.renderUI();
                 } catch (UIRenderException e1) {
                     LOG.error("Cannot render SOAPUIConversionJFrame");
@@ -172,7 +162,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 StringBuilder text = new StringBuilder();
                 for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
                     if ((boolean) resultTable.getModel().getValueAt(row, 0)) {
-                        text.append(SystemUtil.formatXML(cache.get(resultTable.getModel().getValueAt(row, 7))));
+                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getModel().getValueAt(row, 7))));
                     }
                 }
 
@@ -205,9 +195,9 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (int row = 0; row < resultTable.getRowCount(); row++) {
-                    resultTable.getModel().setValueAt(true, resultTable.convertRowIndexToModel(row), 0);
-
+                int[] selectedRows = resultTable.getSelectedRows();
+                for (int i = 0; i < selectedRows.length; i++) {
+                    resultTable.getModel().setValueAt(true, selectedRows[i], 0);
                 }
             }
         });
@@ -274,7 +264,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
                 for (int i = 0; i < rowsSelected.length; i++) {
                     String key = (String) resultTable.getModel().getValueAt(i, 7);
-                    builder.append(SystemUtil.formatXML(cache.get(key)));
+                    builder.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(key)));
                 }
 
                 SystemUtil.copyToClipboard(builder.toString());
@@ -283,13 +273,14 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         });
         resultTable.setFillsViewportHeight(true);
 
-        resultTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        resultTable.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
-            public void valueChanged(ListSelectionEvent event) {
-                if (resultTable.getSelectedRow() > -1 && !event.getValueIsAdjusting()) {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = resultTable.rowAtPoint(evt.getPoint());
+                if (row >= 0) {
                     String keyID = resultTable.getValueAt(resultTable.getSelectedRow(), 7).toString();
                     prettyPrintMessageTextArea(keyID);
-                    ImageUtil.saveImages();
+                    ImageUtil.saveImages(keyID);
                     LOG.debug("Row selected : " + keyID);
                 }
             }
@@ -327,7 +318,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * @param key
      */
     private void prettyPrintMessageTextArea(String key) {
-        String messageToPrint = cache.get(key);
+        String messageToPrint = DataCache.getInstance().getCache().get(key);
         dataPreview.setText(SystemUtil.formatXML(messageToPrint));
     }
 
@@ -343,25 +334,22 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             if (entry.getValue() == null) {
                 continue;
             }
-
             String key = entry.getKey();
             String message = entry.getValue();
 
-            Object[] data = new Object[] { true, TraceStringUtils.extractSEQNumber(key, message), TraceStringUtils.getDateFormatDate(key), TraceStringUtils.extractDateDate(key, message), TraceStringUtils.extractATMID(message), TraceStringUtils.extractMessageType(key, message), TraceStringUtils.isInfoTransaction(key, message), key };
+            String SEQNumber = TraceStringUtils.extractSEQNumber(key, message);
+            Date serverDate = TraceStringUtils.getDateFormatDate(key);
+            Date clientDate = TraceStringUtils.extractDateDate(key, message);
+            String ATMId = TraceStringUtils.extractATMID(message);
+            String messageType = TraceStringUtils.extractMessageType(key, message);
+            boolean infoTransaction = TraceStringUtils.isInfoTransaction(key, message, messageType);
+
+            Object[] data = new Object[] { true, SEQNumber, serverDate, clientDate, ATMId, messageType, infoTransaction, key };
 
             model.addRow(data);
             LOG.debug("Row added : " + data.toString());
-            DragAndDropPanel.logToTextArea("Message : " + data[1] + " detected", true);
         }
 
-    }
-
-    public Map<String, String> getCache() {
-        return cache;
-    }
-
-    public void setCache(Map<String, String> cache) {
-        this.cache = cache;
     }
 
     public JTable getResultTable() {
@@ -380,19 +368,17 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
     @Override
     public void windowClosing(WindowEvent e) {
-        // TODO Auto-generated method stub
-
+        setVisible(false);
+        dispose();
+        DataCache.getInstance().clearAll();
+        LOG.info("MessagesReviewJFrame window closed");
+        LogWrapperUIJFrame.getInstance().display();
+        System.gc();
     }
 
     @Override
     public void windowClosed(WindowEvent e) {
-        setVisible(false);
-        LOG.info("MessagesReviewJFrame window closed");
-        LogWrapperUIJFrame.getInstance().display();
 
-        if (resultTable != null) {
-            resultTable.removeAll();
-        }
     }
 
     @Override
@@ -452,11 +438,6 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             setHorizontalAlignment(CENTER);
 
-            Date ATMDate = (Date) table.getModel().getValueAt(row, 3);
-            if (ATMDate == null) {
-                table.getModel().setValueAt(false, row, 0);
-            }
-
             if (column == 5) {
                 setHorizontalAlignment(LEFT);
             }
@@ -483,7 +464,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
             if (value == null) {
                 return this;
@@ -507,9 +488,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 break;
             case 5:
 
-                String message = cache.get(resultTable.getModel().getValueAt(row, 7));
-
-                if (TraceStringUtils.isRequestMessage(message)) {
+                if (TraceStringUtils.isRequestMessage((String) value)) {
                     Message settings = MessageTypeManager.fromString((String) value);
                     setBackground(settings.getBackground());
                     setForeground(settings.getForeground());
@@ -517,16 +496,18 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     // response
                     setBackground(new Color(153, 255, 255));
                     setForeground(Color.BLACK);
+                    Font font = new Font("Verdana", Font.PLAIN, 12);
+                    Map attributes = c.getFont().getAttributes();
+                    attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    c.setFont(new Font(attributes));
                 }
                 break;
 
             default:
                 break;
             }
-
             setHorizontalAlignment(CENTER);
-
-            return this;
+            return c;
         }
     }
 
