@@ -26,6 +26,8 @@ public class TraceLogProcessor extends AbstractProcessor {
     public static final String WSCC_START_TAG = "<ns2:";
     public static final String WSCC_END_TAG = "</ns2:";
 
+    public static final String SERVER_DATE_TAG = "[TRACE]";
+
     public TraceLogProcessor(File originalLogFile) {
         super(originalLogFile);
         LOG.info("Starting TraceLogProcessor");
@@ -61,12 +63,18 @@ public class TraceLogProcessor extends AbstractProcessor {
         String WSCCMessage = "";
         int messageCount = 0;
         boolean activeMessage = false;
+        String serverDate = "";
         StringBuilder messages = new StringBuilder();
         LineIterator it;
         it = FileUtils.lineIterator(originalLogFile, "UTF-8");
         try {
             while (it.hasNext()) {
                 String currentLine = it.nextLine();
+
+                if (currentLine.startsWith(SERVER_DATE_TAG)) {
+                    serverDate = currentLine.substring(SERVER_DATE_TAG.length(), 33).trim();
+                }
+
                 if (currentLine.startsWith(WSCC_START_TAG) || activeMessage) {
                     activeMessage = true;
                     WSCCMessage += currentLine;
@@ -75,8 +83,7 @@ public class TraceLogProcessor extends AbstractProcessor {
                     if (currentLine.startsWith(WSCC_END_TAG)) {
                         if (isCompliant(WSCCMessage)) {
                             String key = UUID.randomUUID().toString();
-
-                            messages.append(key + AbstractProcessor.SEPARATOR + TraceStringUtils.appendSOAPEnvelope(WSCCMessage));
+                            messages.append(key + AbstractProcessor.SEPARATOR + serverDate + AbstractProcessor.SEPARATOR + TraceStringUtils.appendSOAPEnvelope(WSCCMessage));
                             messageCount++;
                         }
                         WSCCMessage = "";

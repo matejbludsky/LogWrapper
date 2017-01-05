@@ -318,7 +318,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
             List<String> savedFiles = new ArrayList<>();
             for (int row = 0; row < model.getRowCount(); row++) {
                 if ((boolean) model.getValueAt(row, 0)) {
-                    String message = DataCache.getInstance().getCache().get(model.getValueAt(row, 7));
+                    String message = DataCache.getInstance().getCache().get(model.getValueAt(row, 7)).getMessage();
                     messages.add(message);
                 }
             }
@@ -383,8 +383,8 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                 String A = a.substring(0, a.indexOf("&"));
                 String B = b.substring(0, b.indexOf("&"));
 
-                Date dateA = TraceStringUtils.getDateFormatDate(A);
-                Date dateB = TraceStringUtils.getDateFormatDate(B);
+                Date dateA = TraceStringUtils.getDateFromString(A);
+                Date dateB = TraceStringUtils.getDateFromString(B);
 
                 if (dateB.before(dateA)) {
                     return 1;

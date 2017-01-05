@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.cache.DataCache;
+import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**
@@ -65,7 +66,7 @@ public class ImageUtil {
         if (LogWrapperSettings.IMAGES_SAVE) {
             LOG.debug("Analysing preview area");
             // transform check base64 image to file
-            List<String> imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID));
+            List<String> imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID).getMessage());
 
             for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {
                 String string = (String) iterator.next();

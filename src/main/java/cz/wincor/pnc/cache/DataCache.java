@@ -2,6 +2,7 @@ package cz.wincor.pnc.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,18 +13,19 @@ import org.apache.log4j.Logger;
 import cz.wincor.pnc.error.CommTraceLoadException;
 import cz.wincor.pnc.processor.AbstractProcessor;
 import cz.wincor.pnc.settings.LogWrapperSettings;
+import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
  * @author matej.bludsky
  * 
- * 
+ * Cache class implementation
  */
 
 public class DataCache {
 
     private static final Logger LOG = Logger.getLogger(DataCache.class);
     public static DataCache instance = null;
-    private Map<String, String> cache = new HashMap<>();
+    private Map<String, LogWrapperCacheItem> cache = new HashMap<>();
     private File finalCacheFile;
 
     private DataCache() {
@@ -70,14 +72,15 @@ public class DataCache {
             while (it.hasNext()) {
                 String line = it.nextLine();
                 String[] entry = line.split(AbstractProcessor.SEPARATOR);
-                if (entry == null || entry.length != 2) {
+                if (entry == null || entry.length != 3) {
                     LOG.error("Cannot read entry : " + entry);
                     continue;
                 }
 
                 String key = entry[0];
-                String message = entry[1];
-                cache.put(key, message);
+                Date serverDate = TraceStringUtils.getDateFromString(entry[1]);
+                String message = entry[2];
+                cache.put(key, new LogWrapperCacheItem(message, serverDate));
             }
         } finally {
             LineIterator.closeQuietly(it);
@@ -102,8 +105,43 @@ public class DataCache {
         LOG.error("No final cache found");
     }
 
-    public Map<String, String> getCache() {
+    public Map<String, LogWrapperCacheItem> getCache() {
         return cache;
+    }
+
+    /**
+     * Item representation of the TMP loaded file
+     * 
+     * @author matej.bludsky
+     *
+     */
+    public class LogWrapperCacheItem {
+
+        private String message;
+        private Date serverDate;
+
+        public LogWrapperCacheItem(String message, Date serverDate) {
+            super();
+            this.message = message;
+            this.serverDate = serverDate;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Date getServerDate() {
+            return serverDate;
+        }
+
+        public void setServerDate(Date serverDate) {
+            this.serverDate = serverDate;
+        }
+
     }
 
 }

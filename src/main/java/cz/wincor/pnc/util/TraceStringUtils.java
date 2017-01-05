@@ -33,7 +33,7 @@ public class TraceStringUtils {
         return false;
     }
 
-    public static Date getDateFormatDate(String date) {
+    public static Date getDateFromString(String date) {
         Date parsedDate = null;
         for (int i = 0; i < importDateFormats.length; i++) {
             try {
@@ -85,7 +85,7 @@ public class TraceStringUtils {
      * 
      * @param message
      */
-    public static Date extractDateDate(String key, String message) {
+    public static Date extractClientDateToDate(String key, String message) {
         if (isNull(message)) {
             return null;
         }
@@ -111,7 +111,7 @@ public class TraceStringUtils {
      * 
      * @param message
      */
-    public static String extractDateString(String key, String message) {
+    public static String extractClientDateToString(String key, String message) {
         if (isNull(message)) {
             return null;
         }
@@ -147,7 +147,7 @@ public class TraceStringUtils {
             int endTag = message.indexOf("</ClientId>");
             int startTag = message.substring(0, endTag).lastIndexOf(">");
 
-            atmId = message.substring(startTag+1, endTag);
+            atmId = message.substring(startTag + 1, endTag);
             LOG.debug("Extracted ATM ID " + atmId);
         } catch (Exception e) {
             LOG.error("Cannot extract ATM ID");

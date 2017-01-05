@@ -1,5 +1,7 @@
 package cz.wincor.pnc.GUI;
 
+import java.util.Vector;
+
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -23,6 +25,12 @@ public class LogWrapperTableModel extends DefaultTableModel {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int row, int column) {
+        Vector rowVector = (Vector) dataVector.elementAt(row);
+        rowVector.setElementAt(aValue, column);
     }
 
 }

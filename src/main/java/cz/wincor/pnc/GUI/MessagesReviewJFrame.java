@@ -32,6 +32,7 @@ import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -41,6 +42,7 @@ import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.GUI.MessageTypeManager.Message;
 import cz.wincor.pnc.cache.DataCache;
+import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.util.ImageUtil;
@@ -101,7 +103,6 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             JScrollPane scrollPane = new JScrollPane(resultTable);
 
             loadContentFromCache(DataCache.getInstance().getCache());
-
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollPane, sp);
             split.setDividerLocation(400);
             split.setResizeWeight(0.5);
@@ -162,7 +163,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 StringBuilder text = new StringBuilder();
                 for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
                     if ((boolean) resultTable.getModel().getValueAt(row, 0)) {
-                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getModel().getValueAt(row, 7))));
+                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getModel().getValueAt(row, 7)).getMessage()));
                     }
                 }
 
@@ -182,10 +183,16 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
-                    resultTable.getModel().setValueAt(true, row, 0);
-                }
-                resultTable.repaint();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
+                        for (int row = 0; row < model.getRowCount(); row++) {
+                            model.setValueAt(true, row, 0);
+                        }
+                        model.fireTableDataChanged();
+                    }
+                });
             }
         });
 
@@ -195,10 +202,17 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                int[] selectedRows = resultTable.getSelectedRows();
-                for (int i = 0; i < selectedRows.length; i++) {
-                    resultTable.getModel().setValueAt(true, selectedRows[i], 0);
-                }
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
+                        int[] selectedRows = resultTable.getSelectedRows();
+                        for (int i = 0; i < selectedRows.length; i++) {
+                            model.setValueAt(true, resultTable.convertRowIndexToModel(selectedRows[i]), 0);
+                        }
+                        model.fireTableDataChanged();
+                    }
+                });
             }
         });
 
@@ -208,10 +222,17 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
-                    resultTable.getModel().setValueAt(false, row, 0);
-                }
-                resultTable.repaint();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
+                        for (int row = 0; row < model.getRowCount(); row++) {
+                            model.setValueAt(false, row, 0);
+                        }
+                        model.fireTableDataChanged();
+
+                    }
+                });
             }
         });
 
@@ -263,8 +284,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 StringBuilder builder = new StringBuilder();
 
                 for (int i = 0; i < rowsSelected.length; i++) {
-                    String key = (String) resultTable.getModel().getValueAt(i, 7);
-                    builder.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(key)));
+                    String key = (String) resultTable.getModel().getValueAt(rowsSelected[i], 7);
+                    builder.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(key).getMessage()));
                 }
 
                 SystemUtil.copyToClipboard(builder.toString());
@@ -318,7 +339,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * @param key
      */
     private void prettyPrintMessageTextArea(String key) {
-        String messageToPrint = DataCache.getInstance().getCache().get(key);
+        String messageToPrint = DataCache.getInstance().getCache().get(key).getMessage();
         dataPreview.setText(SystemUtil.formatXML(messageToPrint));
     }
 
@@ -327,24 +348,24 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * 
      * @param cache
      */
-    private void loadContentFromCache(Map<String, String> cache) {
+    private void loadContentFromCache(Map<String, LogWrapperCacheItem> cache) {
 
         DefaultTableModel model = (DefaultTableModel) resultTable.getModel();
-        for (Map.Entry<String, String> entry : cache.entrySet()) {
+        for (Map.Entry<String, LogWrapperCacheItem> entry : cache.entrySet()) {
             if (entry.getValue() == null) {
                 continue;
             }
             String key = entry.getKey();
-            String message = entry.getValue();
+            LogWrapperCacheItem item = entry.getValue();
 
-            String SEQNumber = TraceStringUtils.extractSEQNumber(key, message);
-            Date serverDate = TraceStringUtils.getDateFormatDate(key);
-            Date clientDate = TraceStringUtils.extractDateDate(key, message);
-            String ATMId = TraceStringUtils.extractATMID(message);
-            String messageType = TraceStringUtils.extractMessageType(key, message);
-            boolean infoTransaction = TraceStringUtils.isInfoTransaction(key, message, messageType);
+            String SEQNumber = TraceStringUtils.extractSEQNumber(key, item.getMessage());
+            Date serverDate = item.getServerDate();
+            Date clientDate = TraceStringUtils.extractClientDateToDate(key, item.getMessage());
+            String ATMId = TraceStringUtils.extractATMID(item.getMessage());
+            String messageType = TraceStringUtils.extractMessageType(key, item.getMessage());
+            boolean infoTransaction = TraceStringUtils.isInfoTransaction(key, item.getMessage(), messageType);
 
-            Object[] data = new Object[] { true, SEQNumber, serverDate, clientDate, ATMId, messageType, infoTransaction, key };
+            Object[] data = new Object[] { false, SEQNumber, serverDate, clientDate, ATMId, messageType, infoTransaction, key };
 
             model.addRow(data);
             LOG.debug("Row added : " + data.toString());
