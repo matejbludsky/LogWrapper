@@ -40,7 +40,7 @@ Documentation can be found in the repository/HowTo
 ### Download 
 
 ####0.0.6
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.5/logwrapper-0.0.6-dist.zip]
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.6/logwrapper-0.0.6-dist.zip]
 - SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.zip]
 - SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.tar.gz]
 
