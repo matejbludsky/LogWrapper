@@ -30,7 +30,7 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.4-beta
+## LogWrapper 0.0.5
 
 ### What's new
 - Added support for TraceLog files
@@ -42,8 +42,8 @@ Documentation can be found in the repository/HowTo
 
 ### Download 
 
-####0.0.4-beta
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.4-beta/logwrapper-0.0.4-beta-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.4-beta.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.4-beta.tar.gz]
+####0.0.5
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.5/logwrapper-0.0.5-dist.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.5.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.5.tar.gz]
 
