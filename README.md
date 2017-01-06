@@ -30,20 +30,17 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.5
+## LogWrapper 0.0.6
 
 ### What's new
-- Added support for TraceLog files
-- preview
-- SOAPUI export V02 version only
-- Bugfix
-
+- optimization
+- server date fix
 
 
 ### Download 
 
-####0.0.5
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.5/logwrapper-0.0.5-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.5.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.5.tar.gz]
+####0.0.6
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.6/logwrapper-0.0.6-dist.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.tar.gz]
 
