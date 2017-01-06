@@ -35,10 +35,10 @@ public class SystemUtil {
     public static void openImagesLocation() {
         try {
             String location = LogWrapperSettings.normalizeDir(LogWrapperSettings.IMAGES_LOCATION);
-            Process builder = Runtime.getRuntime().exec("cmd /c start " + location);
+            Runtime.getRuntime().exec("cmd /c start " + location);
             LOG.error("Location" + location + " opened in Windows Explorer");
         } catch (IOException e1) {
-            DragAndDropPanel.logToTextArea("Cannot open images folder", true);
+            DragAndDropPanel.getInstance().logToTextArea("Cannot open images folder", true);
             LOG.error("Cannot open location for images", e1);
         }
     }
@@ -49,10 +49,10 @@ public class SystemUtil {
     public static void openSoapUIFinalLocation() {
         try {
             String location = LogWrapperSettings.normalizeDir(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
-            Process builder = Runtime.getRuntime().exec("cmd /c start " + location);
+            Runtime.getRuntime().exec("cmd /c start " + location);
             LOG.error("Location" + location + " opened in Windows Explorer");
         } catch (IOException e1) {
-            DragAndDropPanel.logToTextArea("Cannot open images folder", true);
+            DragAndDropPanel.getInstance().logToTextArea("Cannot open images folder", true);
             LOG.error("Cannot open location for images", e1);
         }
     }
@@ -123,7 +123,7 @@ public class SystemUtil {
             path += "\\tmp\\images\\" + name + ".PNG";
         } else {
             String lastChar = path.substring(path.length() - 1, path.length());
-            if (lastChar != "\\" && lastChar != "/") {
+            if (!lastChar.equals("\\") && !lastChar.equals("/")) {
                 path += "/";
             }
         }

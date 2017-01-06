@@ -44,12 +44,9 @@ public class CommTraceProcessor extends AbstractProcessor {
         }
         try {
             LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.logToTextArea("Extracting file : " + originalLogFile.getName(), true);
+            DragAndDropPanel.getInstance().logToTextArea("Extracting file : " + originalLogFile.getName(), true);
             int numberOfReadMessages = readWSCCRequestsIntoTmpFile();
-            if (numberOfReadMessages == 0) {
-                DragAndDropPanel.logToTextArea("No WSCC Messages found in file " + originalLogFile.getName(), true);
-                return;
-            }
+            DragAndDropPanel.getInstance().logToTextArea(numberOfReadMessages + " WSCC Messages found", true);
 
         } catch (Exception e) {
             LOG.error("Cannot extract comm trace " + originalLogFile.getAbsolutePath(), e);
@@ -83,11 +80,8 @@ public class CommTraceProcessor extends AbstractProcessor {
                         String key = UUID.randomUUID().toString();
                         String message = filterSOAPMessage(WSCCMessage);
                         if (TraceStringUtils.isWSCCMessage(message) && isCompliant(message)) {
-
                             String serverDate = WSCCMessage.substring(WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length(), WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length() + 23);
-
                             messages.append(key + AbstractProcessor.SEPARATOR + serverDate + AbstractProcessor.SEPARATOR + message + System.lineSeparator());
-
                             messageCount++;
                         }
                         WSCCMessage = "";

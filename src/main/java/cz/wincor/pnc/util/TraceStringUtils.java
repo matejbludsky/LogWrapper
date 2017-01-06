@@ -19,7 +19,7 @@ public class TraceStringUtils {
 
     private static final Logger LOG = Logger.getLogger(TraceStringUtils.class);
 
-    public volatile static SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss.SSS  dd.MM.yyyy");
+    public static final String DATE_FORMAT_OUTPUT = "HH:mm:ss.SSS  dd.MM.yyyy";
 
     public static String[] importDateFormats = { "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd, HH:mm:ss.SSS" };
 
@@ -120,7 +120,7 @@ public class TraceStringUtils {
             int startTag = message.indexOf("<ClientRequestTime>");
             int endTag = message.indexOf("</ClientRequestTime>");
 
-            time = dateFormatter.format(Long.parseLong(message.substring(startTag + 19, endTag)));
+            time = new SimpleDateFormat(DATE_FORMAT_OUTPUT).format(Long.parseLong(message.substring(startTag + 19, endTag)));
             LOG.debug("Row id : " + key + " Extracted ATM date " + time);
         } catch (Exception e) {
             LOG.error("Cannot extract ATM Date, message : " + key);

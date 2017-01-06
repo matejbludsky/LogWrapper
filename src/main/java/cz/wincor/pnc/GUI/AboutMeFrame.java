@@ -45,13 +45,13 @@ public class AboutMeFrame extends JFrame implements ILogWrapperUIRenderer, Windo
 
             Font header = new Font("TimesRoman", Font.PLAIN, 20);
 
-            setPreferredSize(new Dimension(300, 170));
+            setPreferredSize(new Dimension(300, 180));
             setTitle("About");
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             setLocation(new Point((int) screenSize.getWidth() / 2 - 150, (int) screenSize.getHeight() / 2 - 85));
 
             JPanel panel = new JPanel();
-            panel.setPreferredSize(new Dimension(300, 250));
+            panel.setPreferredSize(new Dimension(300, 190));
 
             Label author = new Label("Author");
             author.setFont(header);
@@ -68,9 +68,9 @@ public class AboutMeFrame extends JFrame implements ILogWrapperUIRenderer, Windo
             String versionMaven = p.getProperty("logWrapper.version");
 
             Label appName = new Label("LogWrapper");
-            appName.setPreferredSize(new Dimension(280, 20));
+            appName.setPreferredSize(new Dimension(280, 25));
             appName.setFont(header);
-            Label version = new Label("Version :" + versionMaven);
+            Label version = new Label("Version : " + versionMaven);
             version.setPreferredSize(new Dimension(280, 15));
             BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 

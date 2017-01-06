@@ -18,7 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.text.DefaultCaret;
+import javax.swing.text.BadLocationException;
 
 import org.apache.log4j.Logger;
 
@@ -47,7 +47,7 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
     public static final String UNSUPPORTED = "Unsupported file/s : ";
     public static final String SUPPORTED = "Supported file/s : ";
 
-    private static JTextArea logArea;
+    private JTextArea logArea;
     private static JProgressBar progressBar;
 
     public static synchronized DragAndDropPanel getInstance() {
@@ -111,9 +111,6 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
             JScrollPane scrollPane = new JScrollPane(logArea);
             scrollPane.setPreferredSize(new Dimension(470, 300));
 
-            DefaultCaret caret = (DefaultCaret) logArea.getCaret();
-            caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-
             logArea.setDropTarget(dropTarget);
             logArea.setBackground(new Color(190, 190, 190));
 
@@ -157,7 +154,7 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
         progressBar.setValue(0);
     }
 
-    public static void clearTextArea() {
+    public void clearTextArea() {
         logArea.setText("");
     }
 
@@ -188,7 +185,7 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
      * @param message
      * @param lineSeparated
      */
-    public synchronized static void logToTextArea(String message, boolean lineSeparated) {
+    public synchronized void logToTextArea(String message, boolean lineSeparated) {
         if (logArea == null) {
             return;
         }
@@ -199,7 +196,12 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
             logArea.setText(logArea.getText() + message);
         }
 
-        logArea.update(logArea.getGraphics());
+        try {
+            logArea.setCaretPosition(logArea.getLineStartOffset(logArea.getLineCount() - 1));
+        } catch (BadLocationException e) {
+            LOG.error("Cannot move caret");
+        }
+
         LOG.debug("Log message : " + message + " displayed to DragAndDropTextArea");
     }
 
@@ -210,31 +212,28 @@ public class DragAndDropPanel extends JPanel implements ILogWrapperUIRenderer {
      * @param files
      * @param supported
      */
-    public static void renderTextAreaLogFiles(List<File> files, Boolean supported) {
+    public void renderTextAreaLogFiles(List<File> files) {
 
         if (files.isEmpty()) {
             return;
         }
         StringBuffer buffer = new StringBuffer();
 
-        if (supported) {
-            buffer.append(SUPPORTED);
-        } else {
-            buffer.append(UNSUPPORTED);
-        }
-
+        buffer.append(SUPPORTED);
         buffer.append(System.lineSeparator());
         for (File file : files) {
-            if (file.isDirectory()) {
-                continue;
-            }
-
             buffer.append(file.getName());
             buffer.append(System.lineSeparator());
+
         }
 
         logArea.append(logArea.getText() + buffer.toString());
-        logArea.update(logArea.getGraphics());
+
+        try {
+            logArea.setCaretPosition(logArea.getLineStartOffset(logArea.getLineCount() - 1));
+        } catch (BadLocationException e) {
+            LOG.error("Cannot move caret");
+        }
     }
 
     @Override

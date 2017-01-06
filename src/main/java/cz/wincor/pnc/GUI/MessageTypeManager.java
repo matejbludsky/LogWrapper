@@ -81,6 +81,11 @@ public class MessageTypeManager {
             return false;
         }
 
+        @Override
+        public int hashCode() {
+            return name.hashCode();
+        }
+
     }
 
     public static Set<Message> settings;

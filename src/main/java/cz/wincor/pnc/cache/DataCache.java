@@ -2,6 +2,7 @@ package cz.wincor.pnc.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ import cz.wincor.pnc.util.TraceStringUtils;
 /**
  * @author matej.bludsky
  * 
- * Cache class implementation
+ *         Cache class implementation
  */
 
 public class DataCache {
@@ -56,24 +57,24 @@ public class DataCache {
      * @throws IOException
      */
     public void initializeCache() throws CommTraceLoadException, IOException {
-
-        clearAll();
-        findFinalFile();
-
-        if (finalCacheFile == null) {
-            LOG.error("Cannot load cache, File is null");
-            throw new CommTraceLoadException("File cannot be null");
-        }
-
-        LOG.info("Preparing cache for : " + finalCacheFile.getName());
-        LineIterator it;
-        it = FileUtils.lineIterator(finalCacheFile, "UTF-8");
+        LineIterator it = null;
         try {
+            clearAll();
+            findFinalFile();
+
+            if (finalCacheFile == null) {
+                LOG.error("Cannot load cache, File is null");
+                throw new CommTraceLoadException("File cannot be null");
+            }
+
+            LOG.info("Preparing cache for : " + finalCacheFile.getName());
+
+            it = FileUtils.lineIterator(finalCacheFile, "UTF-8");
             while (it.hasNext()) {
                 String line = it.nextLine();
                 String[] entry = line.split(AbstractProcessor.SEPARATOR);
                 if (entry == null || entry.length != 3) {
-                    LOG.error("Cannot read entry : " + entry);
+                    LOG.error("Cannot read entry : " + Arrays.toString(entry));
                     continue;
                 }
 

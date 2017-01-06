@@ -63,7 +63,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = Logger.getLogger(ExportJFrame.class);
 
-    private static JProgressBar progressBar = new JProgressBar();
+    private JProgressBar progressBar = new JProgressBar();
 
     private JCheckBox WAS;
     private JCheckBox JBOSS;
@@ -235,7 +235,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
                                 if (chooser.getSelectedFile() == null) {
                                     LOG.info("File not supported");
-                                    DragAndDropPanel.logToTextArea("Cannot save to selected file", true);
+                                    DragAndDropPanel.getInstance().logToTextArea("Cannot save to selected file", true);
                                     return;
                                 }
                                 filePath = chooser.getSelectedFile().getAbsolutePath();
@@ -332,7 +332,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                 SystemUtil.openImagesLocation();
             } else {
                 JOptionPane.showMessageDialog(progressBar, "No images found in the selected messages", "Warning", JOptionPane.WARNING_MESSAGE);
-                DragAndDropPanel.logToTextArea("No images found for export", true);
+                DragAndDropPanel.getInstance().logToTextArea("No images found for export", true);
             }
             setProgress(100);
 
@@ -347,7 +347,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
      * @param value
      * @param increment
      */
-    public static void updateProgress(int value, boolean increment) {
+    public void updateProgress(int value, boolean increment) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 if (increment) {

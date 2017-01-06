@@ -14,6 +14,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.font.TextAttribute;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -84,6 +85,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     public void renderUI(Object... parameters) throws UIRenderException {
         try {
 
+            DragAndDropPanel.getInstance().logToTextArea("Initializing Preview", true);
+
             addMenu();
             setTitle("Message Review");
             setPreferredSize(new Dimension(1300, 800));
@@ -98,7 +101,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             JScrollPane sp = new JScrollPane(dataPreview);
             DefaultCaret caret = (DefaultCaret) dataPreview.getCaret();
-            caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+            caret.setUpdatePolicy(DefaultCaret.OUT_BOTTOM);
 
             JScrollPane scrollPane = new JScrollPane(resultTable);
 
@@ -148,7 +151,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     export.renderUI();
                 } catch (UIRenderException e1) {
                     LOG.error("Cannot render SOAPUIConversionJFrame");
-                    DragAndDropPanel.logToTextArea("Cannot render SOAPUIConversionJFrame", true);
+                    DragAndDropPanel.getInstance().logToTextArea("Cannot render SOAPUIConversionJFrame", true);
                 }
             }
         });
@@ -350,7 +353,11 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      */
     private void loadContentFromCache(Map<String, LogWrapperCacheItem> cache) {
 
+        DragAndDropPanel.getInstance().logToTextArea("Loading data into preview", true);
+
         DefaultTableModel model = (DefaultTableModel) resultTable.getModel();
+
+        int increment = 0;
         for (Map.Entry<String, LogWrapperCacheItem> entry : cache.entrySet()) {
             if (entry.getValue() == null) {
                 continue;
@@ -369,6 +376,12 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             model.addRow(data);
             LOG.debug("Row added : " + data.toString());
+
+            if (increment > cache.entrySet().size() / 25) {
+                DragAndDropPanel.getInstance().logToTextArea(".", false);
+                increment = 0;
+            }
+            increment++;
         }
 
     }
@@ -447,7 +460,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 valueCopy = "-";
             }
             if (value instanceof Date) {
-                valueCopy = new String(TraceStringUtils.dateFormatter.format(value));
+                valueCopy = new String(new SimpleDateFormat(TraceStringUtils.DATE_FORMAT_OUTPUT).format(value));
 
             }
 

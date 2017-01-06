@@ -70,7 +70,7 @@ public class ImageUtil {
 
             for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {
                 String string = (String) iterator.next();
-                DragAndDropPanel.logToTextArea("Image saved : " + string, true);
+                DragAndDropPanel.getInstance().logToTextArea("Image saved : " + string, true);
             }
         }
     }

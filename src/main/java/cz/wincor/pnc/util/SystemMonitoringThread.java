@@ -29,7 +29,7 @@ public class SystemMonitoringThread extends Thread {
             while (!isInterrupted()) {
                 String statistics = getCPUUsage() + " " + getAppMemory();
                 LogWrapperUIJFrame.getInstance().refreshSystemDetails(statistics);
-                LOG.debug("APP STAT : " + statistics);
+                LOG.trace("APP STAT : " + statistics);
                 sleep(REFRESH_INTERVAL);
             }
         } catch (Exception e) {

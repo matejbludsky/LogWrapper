@@ -105,7 +105,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
                         importProcessor.importFiles(Arrays.asList(files));
                     } catch (FileImportException e1) {
                         LOG.error("Cannot import file/s : " + files.toString());
-                        DragAndDropPanel.logToTextArea("Cannot import file/s : " + files.toString(), true);
+                        DragAndDropPanel.getInstance().logToTextArea("Cannot import file/s : " + Arrays.toString(files), true);
                     }
 
                 }
@@ -121,7 +121,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
                         about.renderUI();
                     } catch (UIRenderException e1) {
                         LOG.error("Cannot render AboutMeFrame ");
-                        DragAndDropPanel.logToTextArea("Cannot display About ", true);
+                        DragAndDropPanel.getInstance().logToTextArea("Cannot display About ", true);
                     }
 
                 }

@@ -26,6 +26,8 @@ public class LogWrapperMain implements Runnable {
 
     public static void main(String[] args) {
 
+        LOG.info("Starting LogWrapper");
+
         Thread mainThread = new Thread(new LogWrapperMain());
         mainThread.start();
 
@@ -51,7 +53,7 @@ public class LogWrapperMain implements Runnable {
             public void run() {
                 LogWrapperUIJFrame mainFrame = LogWrapperUIJFrame.getInstance();
                 try {
-                    mainFrame.renderUI(null);
+                    mainFrame.renderUI();
                     SystemMonitoringThread monitoring = new SystemMonitoringThread();
                     monitoring.start();
                 } catch (UIRenderException e) {
@@ -89,17 +91,16 @@ public class LogWrapperMain implements Runnable {
             for (int i = 0; i < args.length; i++) {
                 File f = createFile(args[i]);
                 if (f != null) {
+                    LOG.debug("Argument file found : " + f.getAbsolutePath());
                     files.add(f);
                 }
             }
-
             if (!files.isEmpty()) {
+                LOG.debug("Processing arguments");
                 FileImporter processor = new FileImporter();
                 processor.importFiles(files);
             }
-
         }
-
     }
 
     private static File createFile(String path) {
@@ -111,7 +112,7 @@ public class LogWrapperMain implements Runnable {
         }
 
         LOG.warn("File : " + path + " doesnt exist");
-        DragAndDropPanel.logToTextArea("File : " + path + " doesnt exist, cannot import", true);
+        DragAndDropPanel.getInstance().logToTextArea("File : " + path + " doesnt exist, cannot import", true);
         return null;
     }
 

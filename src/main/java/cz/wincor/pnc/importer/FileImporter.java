@@ -121,27 +121,27 @@ public class FileImporter implements IFileImporter {
         protected Boolean doInBackground() throws Exception {
 
             List<File> supported = new ArrayList<File>();
-            List<File> unsupported = new ArrayList<File>(importFiles);
             try {
                 FileUtil.clearDirectory(LogWrapperSettings.TMP_LOCATION);
 
                 for (File droppedFile : importFiles) {
-                    DragAndDropPanel.clearTextArea();
+                    DragAndDropPanel.getInstance().clearTextArea();
                     LOG.info("Importing dropped file : " + droppedFile.getAbsolutePath());
 
                     Files.walk(droppedFile.toPath()).forEach(path -> isSupported(path.toFile(), supported));
-                    /**
-                     * Process Files
-                     **/
-                    LOG.debug("Processing files : " + supported.toString());
 
                 }
-                DragAndDropPanel.renderTextAreaLogFiles(supported, true);
+
+                DragAndDropPanel.getInstance().renderTextAreaLogFiles(supported);
                 DragAndDropPanel.resetProgressBar();
                 setProgress(15);
                 int updateValue = 0;
                 // create log items
                 for (File log : supported) {
+                    /**
+                     * Process Files
+                     **/
+                    LOG.debug("Processing file : " + log.getName());
                     PCEServerLog serverLog = new PCEServerLog(log, PCELogType.fromFileName(log.getName()));
                     AbstractProcessor processor = ProcessorFactory.getInstance().getProcessor(serverLog);
                     processor.process();
@@ -151,16 +151,18 @@ public class FileImporter implements IFileImporter {
                     processor = null;
                 }
 
-                unsupported.removeAll(supported);
                 // load MessageReviewFrame
                 if (!supported.isEmpty()) {
+                    DragAndDropPanel.getInstance().logToTextArea("Merging Data", true);
                     FileUtil.mergeExtractedTmpFiles();
+                    DragAndDropPanel.getInstance().logToTextArea("Initializing cache", true);
                     DataCache.getInstance().initializeCache();
                     MessagesReviewJFrame preview = new MessagesReviewJFrame();
                     preview.renderUI();
                 } else {
-                    DragAndDropPanel.renderTextAreaLogFiles(unsupported, false);
+                    DragAndDropPanel.getInstance().logToTextArea("No files supported", true);
                 }
+
                 setProgress(100);
                 System.gc();
 

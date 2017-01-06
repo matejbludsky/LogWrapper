@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**
@@ -40,10 +41,16 @@ public class FileUtil {
 
         File[] files = path.listFiles();
 
+        int increment = 0;
         StringBuilder content = new StringBuilder();
         for (int i = 0; i < files.length; i++) {
             if (files[i].isFile() && files[i].getName().endsWith(".tmp")) {
                 content.append(FileUtils.readFileToString(files[i]));
+                if (increment < 150) {
+                    DragAndDropPanel.getInstance().logToTextArea(".", false);
+                    increment = 0;
+                }
+                increment++;
             }
         }
 
