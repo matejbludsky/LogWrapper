@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cz.wincor.pnc</groupId>
 	<artifactId>logwrapper</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.4-beta</version>
 	<name>LogWapper</name>
 
 	<properties>
@@ -12,6 +12,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.main.class>cz.wincor.pnc.main.LogWapperMain</java.main.class>
 		<logWrapper.version>${project.version}</logWrapper.version>
+		<wix.groupId>org.wixtoolset</wix.groupId>
+		<wix.version>3.9.2</wix.version>
 	</properties>
 
 	<developers>
@@ -62,6 +64,7 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+
 				</configuration>
 			</plugin>
 
@@ -163,8 +166,34 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.github.wix-maven</groupId>
+				<artifactId>wix-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>  
+					<sourceFiles>  
+						<sourceFile>LogWrapper.wxs</sourceFile>  
+					</sourceFiles>  
+					<outputDirectory>target</outputDirectory>  
+					<objectFiles>  
+						<objectFile>tLogWrapper.wixobj</objectFile>  
+					</objectFiles>  
+					<outputFile>LogWrapper.msi</outputFile>  
+				</configuration>  
+				<executions>  
+					<execution>  
+						<id>wix</id>  
+						<goals>  
+							<goal>candle</goal>  
+							<goal>light</goal>  
+						</goals>  
+					</execution>  
+				</executions>  
+
+			</plugin>
 		</plugins>
 	</build>
+
 
 
 
@@ -204,6 +233,10 @@
 			<artifactId>ini4j</artifactId>
 			<version>0.5.4</version>
 		</dependency>
+		
+
+
+
 	</dependencies>
 
 </project>
