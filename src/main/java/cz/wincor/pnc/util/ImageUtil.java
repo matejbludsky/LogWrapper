@@ -1,17 +1,27 @@
 package cz.wincor.pnc.util;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.media.jai.PlanarImage;
+import javax.swing.ImageIcon;
+
 import org.apache.log4j.Logger;
+
+import com.mortennobel.imagescaling.ResampleOp;
+import com.sun.media.jai.codec.ByteArraySeekableStream;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.SeekableStream;
 
 import cz.wincor.pnc.GUI.DragAndDropPanel;
 import cz.wincor.pnc.cache.DataCache;
-import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
-import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**
  * @author matej.bludsky
@@ -34,11 +44,8 @@ public class ImageUtil {
      */
     public static List<String> saveImagesToFile(String content) {
 
-        String fileNameAppendix = TraceStringUtils.extractClientRequestNumber(content);
+        String fileNameAppendix = UUID.randomUUID().toString();
 
-        if (fileNameAppendix == null) {
-            fileNameAppendix = UUID.randomUUID().toString();
-        }
         List<String> imagePaths = new ArrayList<>();
 
         List<String> images = TraceStringUtils.extractImage(content);
@@ -59,20 +66,37 @@ public class ImageUtil {
 
     }
 
+    public static BufferedImage resizeImage(double zoom, BufferedImage image) {
+        System.out.println(zoom);
+        ResampleOp resampleOp = new ResampleOp((int) (image.getWidth() * zoom), (int) (image.getHeight() * zoom));
+        BufferedImage resizedIcon = resampleOp.filter(image, null);
+        return resizedIcon;
+    }
+
+    public static BufferedImage loadTIFFImage(byte[] data) throws Exception {
+        BufferedImage image = null;
+        SeekableStream stream = new ByteArraySeekableStream(data);
+        String[] names = ImageCodec.getDecoderNames(stream);
+        ImageDecoder dec = ImageCodec.createImageDecoder(names[0], stream, null);
+        RenderedImage im = dec.decodeAsRenderedImage();
+        image = PlanarImage.wrapRenderedImage(im).getAsBufferedImage();
+        return image;
+    }
+
     /**
      * finds <Image> tag and converts base64 data into image as html
      */
-    public static void saveImages(String keyID) {
-        if (LogWrapperSettings.IMAGES_SAVE) {
-            LOG.debug("Analysing preview area");
-            // transform check base64 image to file
-            List<String> imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID).getMessage());
-
-            for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {
-                String string = (String) iterator.next();
-                DragAndDropPanel.getInstance().logToTextArea("Image saved : " + string, true);
-            }
+    public static List<String> saveImages(String keyID) {
+        List<String> imageLocations = new ArrayList<>();
+        LOG.debug("Analysing preview area");
+        // transform check base64 image to file
+        imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID).getMessage());
+        for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {
+            String string = (String) iterator.next();
+            DragAndDropPanel.getInstance().logToTextArea("Image saved : " + string, true);
         }
+
+        return imageLocations;
     }
 
 }

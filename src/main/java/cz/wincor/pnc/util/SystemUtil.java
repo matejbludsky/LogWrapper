@@ -120,7 +120,7 @@ public class SystemUtil {
         String path = LogWrapperSettings.IMAGES_LOCATION;
         if (path == null || path.isEmpty()) {
             path = Paths.get("").toAbsolutePath().toString();
-            path += "\\tmp\\images\\" + name + ".PNG";
+            path += "\\tmp\\images\\" + name + ".TIFF";
         } else {
             String lastChar = path.substring(path.length() - 1, path.length());
             if (!lastChar.equals("\\") && !lastChar.equals("/")) {
@@ -132,13 +132,14 @@ public class SystemUtil {
         try {
             createImagesDirectory(path);
 
-            path += name + ".PNG";
+            path += name + ".TIFF";
             path = path.replace("\\", "/");
 
             byte[] decoded = Base64.decodeBase64(image);
             f = new File(path);
             f.createNewFile();
 
+            path = f.getAbsolutePath();
             fos = new FileOutputStream(f);
             fos.write(decoded);
         } catch (IOException e) {

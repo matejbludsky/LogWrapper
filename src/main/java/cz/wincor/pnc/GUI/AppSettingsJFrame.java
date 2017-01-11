@@ -58,7 +58,7 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
     @Override
     public void renderUI(Object... parameters) throws UIRenderException {
         setTitle("Application settings");
-        setPreferredSize(new Dimension(350, 450));
+        setPreferredSize(new Dimension(350, 420));
         setDefaultLookAndFeelDecorated(true);
         setResizable(false);
 
@@ -131,20 +131,7 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
                 LOG.debug("TRACE_NAME_REGEXP changed to : " + source.getText());
 
             }
-        });
-        
-        
-        JRadioButton saveImages = new JRadioButton("Automatically save images");
-        saveImages.setPreferredSize(new Dimension(300, 20));
-        saveImages.setSelected(LogWrapperSettings.IMAGES_SAVE);
-        saveImages.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JRadioButton source = (JRadioButton) e.getSource();
-                LogWrapperSettings.IMAGES_SAVE = source.isSelected();
-            }
-        });
+        });    
 
         Label imagesLocationLabel = new Label("Image output location");
         imagesLocationLabel.setPreferredSize(new Dimension(300, 20));
@@ -240,7 +227,6 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
         mainPanel.add(commTraceNames, layout);
         mainPanel.add(traceNamesLabel, layout);
         mainPanel.add(traceNames, layout);
-        mainPanel.add(saveImages, layout);
         mainPanel.add(imagesLocationLabel, layout);
         mainPanel.add(imagesLocation, layout);
         mainPanel.add(imagesClear, layout);

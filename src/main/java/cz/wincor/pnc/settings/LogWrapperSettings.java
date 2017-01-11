@@ -36,7 +36,6 @@ public class LogWrapperSettings {
     public static String COMMTRACE_NAME_REGEXP = "/\bCommTrace\b/";
     public static String TRACE_NAME_REGEXP = "/\bTraceLog\b/";
     public static String IMAGES_LOCATION = currentDir + "/tmp/images";
-    public static boolean IMAGES_SAVE = false;
     public static boolean IMAGES_CLEAR_ON_START = true;
     public static boolean ENDPOINT_JBOSS = true;
     public static boolean ENDPOINT_WAS = false;
@@ -70,7 +69,6 @@ public class LogWrapperSettings {
         prop.put("commtrace.names", COMMTRACE_NAME_REGEXP);
         prop.put("tracelog.names", TRACE_NAME_REGEXP);
         prop.put("images.location", IMAGES_LOCATION);
-        prop.put("images.save", Boolean.toString(IMAGES_SAVE));
         prop.put("images.clear", Boolean.toString(IMAGES_CLEAR_ON_START));
         prop.put("soapui.location", SOAPUI_FINAL_LOCATION);
         prop.put("soapui.clear", Boolean.toString(SOAP_CLEAR_ON_START));
@@ -109,7 +107,6 @@ public class LogWrapperSettings {
             COMMTRACE_NAME_REGEXP = prop.getProperty("commtrace.names");
             TRACE_NAME_REGEXP = prop.getProperty("tracelog.names");
             IMAGES_LOCATION = prop.getProperty("images.location");
-            IMAGES_SAVE = Boolean.parseBoolean(prop.getProperty("images.save"));
             IMAGES_CLEAR_ON_START = Boolean.parseBoolean(prop.getProperty("images.clear"));
             SOAPUI_FINAL_LOCATION = prop.getProperty("soapui.location");
             SOAP_CLEAR_ON_START = Boolean.parseBoolean(prop.getProperty("soapui.clear"));

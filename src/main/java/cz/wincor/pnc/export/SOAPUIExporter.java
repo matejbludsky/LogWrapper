@@ -107,9 +107,8 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
         if (LogWrapperSettings.SOAP_CLEAR_BEFORE) {
             FileUtil.clearDirectory(finalFilePath);
         }
-        Files.createDirectories(Paths.get(finalFilePath).getParent());
 
-        copyFiles(finalFilePath);
+        Files.createDirectories(Paths.get(finalFilePath));
         writeTemplate(template, finalFilePath, templateName + ".xml");
 
         LOG.info("Transformed SOAPUI template written to : " + finalFilePath);
@@ -244,33 +243,6 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
 
     private void writeTemplate(String template, String finalFilePath, String name) throws IOException {
         FileUtils.writeStringToFile(new File(finalFilePath + "/" + name), template);
-    }
-
-    /**
-     * Copy WSDL folder from resources to the destination folder
-     * 
-     * @throws IOException
-     */
-    private void copyFiles(String finalDest) throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File srcFolder = new File(classLoader.getResource("WSDL").getFile());
-
-        Path path = Paths.get(finalDest + "/WSDL");
-        Files.createDirectories(path);
-
-        File destFolder = new File(finalDest + "/WSDL");
-
-        // make sure source exists
-        if (!srcFolder.exists()) {
-            LOG.error("Directory WSDL doesnt exist");
-        } else {
-            try {
-                FileUtil.copyFolder(srcFolder, destFolder);
-            } catch (IOException e) {
-                LOG.error("Cannot copy folder", e);
-            }
-        }
-
     }
 
     private String replaceProjectName(String template, String name) {

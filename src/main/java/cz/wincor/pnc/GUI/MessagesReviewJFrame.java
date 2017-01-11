@@ -4,32 +4,50 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.font.TextAttribute;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
-import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
@@ -37,9 +55,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
-import javax.swing.text.DefaultCaret;
+import javax.swing.text.PlainDocument;
 
 import org.apache.log4j.Logger;
+import org.bounce.text.xml.XMLEditorKit;
+import org.bounce.text.xml.XMLStyleConstants;
+import org.imgscalr.Scalr;
 
 import cz.wincor.pnc.GUI.MessageTypeManager.Message;
 import cz.wincor.pnc.cache.DataCache;
@@ -68,8 +89,11 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
     private String[] columnNames = { "Included", "SEQNumber", "ServerTimeID", "ATMTime", "ATMID", "MessageName", "InfoTransaction", "ID" };
 
+    private double zoom = 1.0; // zoom factor
     private JTable resultTable;
-    private JTextPane dataPreview;
+    private JEditorPane dataPreview;
+    private JPanel imageView;
+    private List<String> activeImages = new ArrayList<>();
 
     public MessagesReviewJFrame() throws HeadlessException {
         LOG.info("Starting MessagesPanel");
@@ -96,17 +120,13 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
             renderTable();
 
-            dataPreview = new JTextPane();
-            dataPreview.setBackground(new Color(240, 240, 240));
+            JScrollPane previewScrollablePane = new JScrollPane(RenderPreviewPanel());
+            previewScrollablePane.getVerticalScrollBar().setUnitIncrement(20);
 
-            JScrollPane sp = new JScrollPane(dataPreview);
-            DefaultCaret caret = (DefaultCaret) dataPreview.getCaret();
-            caret.setUpdatePolicy(DefaultCaret.OUT_BOTTOM);
-
-            JScrollPane scrollPane = new JScrollPane(resultTable);
+            JScrollPane tableScrollablePane = new JScrollPane(resultTable);
 
             loadContentFromCache(DataCache.getInstance().getCache());
-            JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollPane, sp);
+            JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
             split.setDividerLocation(400);
             split.setResizeWeight(0.5);
 
@@ -121,6 +141,101 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             throw new UIRenderException("Cannot render MessagesReviewJFrame", e);
         }
 
+    }
+
+    /**
+     * Method is rendering preview area panel
+     * @return
+     */
+    private JPanel RenderPreviewPanel() {
+        JPanel previewPanel = new JPanel();
+        previewPanel.setLayout(new BorderLayout());
+
+        JPanel functionPanel = new JPanel();
+        functionPanel.setLayout(new BorderLayout());
+
+        JPanel actionPanel = new JPanel();
+        actionPanel.setPreferredSize(new Dimension(450, 60));
+        actionPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        actionPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Action"), BorderFactory.createEmptyBorder(0, 0, 0, 0)));
+
+        JButton reset = new JButton("Discard Changes");
+        reset.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!dataPreview.getText().isEmpty()) {
+                    reloadPreviewContent(resultTable.getSelectedRow(), false);
+                }
+            }
+        });
+
+        JButton save = new JButton("Save Altered XML");
+        save.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String key = (String) resultTable.getValueAt(resultTable.getSelectedRow(), 7);
+                LogWrapperCacheItem item = DataCache.getInstance().getCache().get(key);
+                item.setMessage(dataPreview.getText());
+            }
+        });
+
+        actionPanel.add(reset);
+        actionPanel.add(save);
+
+        functionPanel.add(actionPanel, BorderLayout.NORTH);
+
+        imageView = new JPanel();
+        imageView.setBackground(new Color(240, 240, 240));
+        imageView.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Image Preview"), BorderFactory.createEmptyBorder(0, 0, 0, 0)));
+
+        functionPanel.add(imageView, BorderLayout.CENTER);
+
+        dataPreview = new JEditorPane();
+
+        final XMLEditorKit kit = new XMLEditorKit();
+        kit.setTagCompletion(true);
+        kit.setAutoIndentation(true);
+
+        dataPreview.setFont(new Font("Monospace", Font.PLAIN, 14));
+        dataPreview.getDocument().putProperty(PlainDocument.tabSizeAttribute, new Integer(4));
+        // Set style
+        kit.setStyle(XMLStyleConstants.ATTRIBUTE_NAME, Color.GREEN.darker(), Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.ATTRIBUTE_VALUE, Color.MAGENTA.darker(), Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.COMMENT, Color.GRAY, Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.DECLARATION, Color.DARK_GRAY, Font.BOLD);
+        kit.setStyle(XMLStyleConstants.ELEMENT_NAME, Color.BLUE, Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.ELEMENT_PREFIX, Color.BLUE, Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.ELEMENT_VALUE, Color.BLACK, Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.NAMESPACE_NAME, Color.GREEN.darker(), Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.NAMESPACE_VALUE, Color.MAGENTA.darker(), Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.NAMESPACE_PREFIX, Color.GREEN.darker(), Font.PLAIN);
+        kit.setStyle(XMLStyleConstants.SPECIAL, Color.BLACK, Font.PLAIN);
+
+        dataPreview.setEditorKit(kit);
+        dataPreview.setEditable(true);
+
+        dataPreview.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                dataPreview.setBackground(new Color(240, 240, 240));
+            }
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                dataPreview.setBackground(Color.WHITE);
+
+            }
+        });
+
+        dataPreview.setBackground(new Color(240, 240, 240));
+        dataPreview.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Preview"), BorderFactory.createEmptyBorder(0, 0, 0, 0)));
+        previewPanel.add(functionPanel, BorderLayout.WEST);
+        previewPanel.add(dataPreview, BorderLayout.CENTER);
+
+        return previewPanel;
     }
 
     /**
@@ -165,8 +280,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
                 StringBuilder text = new StringBuilder();
                 for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
-                    if ((boolean) resultTable.getModel().getValueAt(row, 0)) {
-                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getModel().getValueAt(row, 7)).getMessage()));
+                    if ((boolean) resultTable.getValueAt(row, 0)) {
+                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getValueAt(row, 7)).getMessage()));
                     }
                 }
 
@@ -248,6 +363,123 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     }
 
     /**
+     * Reloads preview panel with row content
+     * 
+     * @param row
+     * @param saveImage
+     */
+    private void reloadPreviewContent(int row, boolean saveImage) {
+        if (row >= 0) {
+            String keyID = resultTable.getValueAt(resultTable.getSelectedRow(), 7).toString();
+            prettyPrintMessageTextArea(keyID);
+            if (saveImage) {
+                activeImages = ImageUtil.saveImages(keyID);
+
+                if (!activeImages.isEmpty()) {
+                    loadImagesToPreviewArea();
+                }
+            }
+
+            LOG.debug("Row selected : " + keyID);
+        }
+    }
+
+    /**
+     * Method is loading images from file and constructing preview for images
+     */
+    private void loadImagesToPreviewArea() {
+
+        imageView.removeAll();
+
+        int counter = 0;
+        for (String imagePath : activeImages) {
+            counter++;
+            LOG.debug("Previewing image : " + imagePath);
+            try {
+                FileInputStream in = new FileInputStream(imagePath);
+                FileChannel channel = in.getChannel();
+                ByteBuffer buffer = ByteBuffer.allocate((int) channel.size());
+                channel.read(buffer);
+                BufferedImage image = ImageUtil.loadTIFFImage(buffer.array());
+                BufferedImage thumbnail = Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH, 400, 200, Scalr.OP_ANTIALIAS);
+                BufferedImage thumbnail2 = Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH, 800, 600, Scalr.OP_ANTIALIAS);
+
+                ImageJLabel imageLabel = new ImageJLabel(thumbnail2, new ImageIcon(thumbnail));
+
+                imageLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+
+                        ImageJLabel originalLabel = (ImageJLabel) evt.getSource();
+                        ImageJLabel imageLabel = new ImageJLabel(originalLabel.getImage(), new ImageIcon(originalLabel.getImage()));
+                        imageLabel.addMouseWheelListener(new MouseWheelListener() {
+                            public void mouseWheelMoved(MouseWheelEvent e) {
+                                ImageJLabel label = (ImageJLabel) e.getSource();
+                                int notches = e.getWheelRotation();
+                                double temp = zoom - (notches * 0.2);
+                                // minimum zoom factor is 1.0
+                                temp = Math.max(temp, 1.0);
+                                if (temp != zoom) {
+                                    zoom = temp;
+                                    label.setIcon(new ImageIcon(ImageUtil.resizeImage(zoom, label.getImage())));
+                                }
+                            }
+                        });
+
+                        JFrame imageFrame = new JFrame("Image Detail");
+
+                        JScrollPane jScrollPane = new JScrollPane(imageLabel);
+
+                        imageLabel.addMouseListener(new MouseAdapter() {
+
+                            @Override
+                            public void mousePressed(MouseEvent e) {
+                                imageLabel.setInitialX(e.getX());
+                                imageLabel.setInitialY(e.getY());
+                            }
+                        });
+
+                        imageLabel.addMouseMotionListener(new MouseMotionAdapter() {
+
+                            @Override
+                            public void mouseDragged(MouseEvent e) {
+                                int thisX = imageLabel.getLocation().x;
+                                int thisY = imageLabel.getLocation().y;
+
+                                int xMoved = (thisX + e.getX()) - (thisX + imageLabel.getInitialX());
+                                int yMoved = (thisY + e.getY()) - (thisY + imageLabel.getInitialY());
+
+                                int X = thisX + xMoved;
+                                int Y = thisY + yMoved;
+
+                                imageLabel.setLocation(X, Y);
+                                imageLabel.repaint();
+                            }
+                        });
+
+                        imageFrame.getContentPane().add(jScrollPane, BorderLayout.CENTER);
+                        imageFrame.pack();
+                        imageFrame.setLocationRelativeTo(null);
+                        imageFrame.setVisible(true);
+
+                    }
+                });
+
+                imageLabel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Integer.toString(counter)), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+
+                BoxLayout imageViewLayout = new BoxLayout(imageView, BoxLayout.Y_AXIS);
+                imageView.setLayout(imageViewLayout);
+                imageView.add(imageLabel);
+
+            } catch (Exception e) {
+                LOG.error("Cannot preview image", e);
+            }
+
+        }
+
+    }
+
+    /**
      * Creates instance of the resultTable and renders its content
      */
     private void renderTable() {
@@ -275,6 +507,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             }
 
         };
+
         LogWrapperTableModel model = new LogWrapperTableModel();
         model.setColumnIdentifiers(columnNames);
         resultTable.setModel(model);
@@ -287,12 +520,12 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 StringBuilder builder = new StringBuilder();
 
                 for (int i = 0; i < rowsSelected.length; i++) {
-                    String key = (String) resultTable.getModel().getValueAt(rowsSelected[i], 7);
+                    String key = (String) resultTable.getValueAt(rowsSelected[i], 7);
                     builder.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(key).getMessage()));
                 }
 
                 SystemUtil.copyToClipboard(builder.toString());
-                LOG.debug("Rows " + rowsSelected.toString() + " copied into clipboard");
+                LOG.debug("Rows " + Arrays.toString(rowsSelected) + " copied into clipboard");
             }
         });
         resultTable.setFillsViewportHeight(true);
@@ -301,12 +534,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 int row = resultTable.rowAtPoint(evt.getPoint());
-                if (row >= 0) {
-                    String keyID = resultTable.getValueAt(resultTable.getSelectedRow(), 7).toString();
-                    prettyPrintMessageTextArea(keyID);
-                    ImageUtil.saveImages(keyID);
-                    LOG.debug("Row selected : " + keyID);
-                }
+                reloadPreviewContent(row, true);
             }
         });
 
@@ -343,7 +571,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      */
     private void prettyPrintMessageTextArea(String key) {
         String messageToPrint = DataCache.getInstance().getCache().get(key).getMessage();
-        dataPreview.setText(SystemUtil.formatXML(messageToPrint));
+        dataPreview.setText(SystemUtil.formatXML(messageToPrint.trim()));
+        dataPreview.setCaretPosition(0);
     }
 
     /**

@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -40,6 +42,7 @@ import javax.swing.table.TableModel;
 import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.cache.DataCache;
+import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.export.SOAPUIExporter;
@@ -208,7 +211,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
 
-                        String filePath = null;
+                        String filePath = LogWrapperSettings.SOAPUI_FINAL_LOCATION;
                         /* if soapui.project.location set do not display file chooser */
                         if (LogWrapperSettings.SOAPUI_FINAL_LOCATION.isEmpty()) {
                             JFileChooser chooser = new JFileChooser();
@@ -371,7 +374,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
         for (int row = 0; row < model.getRowCount(); row++) {
             if ((boolean) model.getValueAt(row, 0)) {
-                tmpCache.add(model.getValueAt(row, 7).toString() + "&" + DataCache.getInstance().getCache().get(model.getValueAt(row, 7).toString()));
+                tmpCache.add(model.getValueAt(row, 7).toString() + "&" + DataCache.getInstance().getCache().get(model.getValueAt(row, 7)).getMessage());
             }
         }
 
@@ -383,8 +386,8 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                 String A = a.substring(0, a.indexOf("&"));
                 String B = b.substring(0, b.indexOf("&"));
 
-                Date dateA = TraceStringUtils.getDateFromString(A);
-                Date dateB = TraceStringUtils.getDateFromString(B);
+                Date dateA = DataCache.getInstance().getCache().get(A).getServerDate();
+                Date dateB = DataCache.getInstance().getCache().get(B).getServerDate();
 
                 if (dateB.before(dateA)) {
                     return 1;
@@ -401,7 +404,6 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
         Collections.sort(tmpCache, comp);
 
         // remove key from the list
-
         for (Iterator<String> iterator = tmpCache.iterator(); iterator.hasNext();) {
             String string = (String) iterator.next();
             string = string.substring(string.indexOf("&") + 1, string.length());

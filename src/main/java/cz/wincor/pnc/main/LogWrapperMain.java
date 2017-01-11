@@ -74,7 +74,8 @@ public class LogWrapperMain implements Runnable {
             FileUtil.clearDirectory(LogWrapperSettings.IMAGES_LOCATION);
         }
 
-        Files.createDirectories(Paths.get(LogWrapperSettings.IMAGES_LOCATION).getParent());
+        Files.createDirectories(Paths.get(LogWrapperSettings.IMAGES_LOCATION));
+        Files.createDirectories(Paths.get(LogWrapperSettings.SOAPUI_FINAL_LOCATION));
 
     }
 

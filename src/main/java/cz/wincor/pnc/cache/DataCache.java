@@ -2,10 +2,12 @@ package cz.wincor.pnc.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -89,6 +91,22 @@ public class DataCache {
         }
     }
 
+   /*
+    public void synchronizeCacheIntoFile() throws IOException {
+
+        StringBuilder content = new StringBuilder();
+
+        for (Map.Entry<String, LogWrapperCacheItem> entry : cache.entrySet()) {
+            String key = entry.getKey();
+            String serverDate = new SimpleDateFormat(TraceStringUtils.importDateFormats[0]).format(entry.getValue().getServerDate());
+            String message = entry.getValue().getMessage();
+            content.append(key + AbstractProcessor.SEPARATOR + serverDate + AbstractProcessor.SEPARATOR + message);
+        }
+
+        FileUtils.writeStringToFile(finalCacheFile, content.toString());
+        LOG.debug("Cache refreshed");
+    }
+*/
     /**
      * find the final cache file created by log processors
      */
