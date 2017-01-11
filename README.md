@@ -1,5 +1,5 @@
 # LogWrapper
-Application for CommTrace and TraceLog analysis plus export to SOAP UI and image extract.
+Application for WSCC CommTrace and TraceLog analysis plus export to SOAP UI and image extract.
 WSCC V02 partial support, see how to document.
 
 
@@ -30,17 +30,17 @@ Documentation can be found in the repository/HowTo
 
 # RELEASE 
 
-## LogWrapper 0.0.6
+## LogWrapper 0.0.7
 
 ### What's new
-- optimization
-- server date fix
+- check image preview
+- bugfix 
 
 
 ### Download 
 
-####0.0.6
-- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.6/logwrapper-0.0.6-dist.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.zip]
-- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.6.tar.gz]
+####0.0.7
+- RELEASE PACKAGE [https://github.com/matejbludsky/LogWrapper/releases/download/0.0.7/logwrapper-0.0.7-dist.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.7.zip]
+- SOURCES [https://github.com/matejbludsky/LogWrapper/archive/0.0.7.tar.gz]
 
