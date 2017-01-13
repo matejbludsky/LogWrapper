@@ -210,7 +210,7 @@
 					
 					<outputDirectory>target/</outputDirectory>  	
 					<objectFiles>  
-						<objectFile>tLogWrapper.wixobj</objectFile>  
+						<objectFile>LogWrapper.wixobj</objectFile>  
 					</objectFiles>  
 					<outputFile>LogWrapper.msi</outputFile>  
 				</configuration>  
