@@ -174,29 +174,17 @@
 				<groupId>com.github.wix-maven</groupId>
 				<artifactId>wix-maven-plugin</artifactId>
 				<extensions>true</extensions>
-				<configuration>  
-					<sourceFiles>  
-						<sourceFile>LogWrapper.wix</sourceFile>
-					</sourceFiles>  
-					
-					<outputDirectory>target/</outputDirectory>  	
-							  
-					<outputFile>LogWrapper.msi</outputFile>  
-				</configuration>  
 				<executions>  
 					<execution>  
 						<id>wix</id>  
 						<phase>package</phase>
 						<goals>  
-							<goal>toolset</goal> 
-							<goal>candle</goal> 
-							
+							<goal>toolset</goal> 						
 						</goals>  
-						  
-					</execution>  
-					
+					</execution> 
 				</executions>  
 			</plugin>
+			
 			
 			
 			<plugin>
@@ -205,13 +193,12 @@
 				<extensions>true</extensions>
 				<configuration>  
 					<sourceFiles>  
-						<sourceFile>LogWrapper.wixobj</sourceFile>
-					</sourceFiles>  
-					
+						<sourceFile>LogWrapper.wix</sourceFile>
+					</sourceFiles>  				
 					<outputDirectory>target/</outputDirectory>  	
 					<objectFiles>  
 						<objectFile>LogWrapper.wixobj</objectFile>  
-					</objectFiles>  
+					</objectFiles>    
 					<outputFile>LogWrapper.msi</outputFile>  
 				</configuration>  
 				<executions>  
@@ -219,15 +206,16 @@
 						<id>wix</id>  
 						<phase>package</phase>
 						<goals>  
-							
-							<goal>light</goal> 
-							
+							<goal>toolset</goal>
+							<goal>candle</goal> 		
+							<goal>light</goal> 				
 						</goals>  
-						  
-					</execution>  
-					
+					</execution> 
 				</executions>  
 			</plugin>
+			
+			
+			
 			
 			
 			
