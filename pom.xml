@@ -163,6 +163,39 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			
+			<plugin>
+				<groupId>com.github.wix-maven</groupId>
+				<artifactId>wix-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>  
+					<packaging>msi</packaging>
+					<sourceFiles>  
+						<sourceFile>src/main/wix/LogWrapper.wxs</sourceFile>
+					</sourceFiles>  				
+					<outputDirectory>target/</outputDirectory>  	
+					<objectFiles>  
+						<objectFile>target/LogWrapper.wixobj</objectFile>  
+					</objectFiles>   
+					<outputFile>target/LogWrapper-${project.version}_${profile.name}.msi</outputFile> 
+					<outputFile>LogWrapper.msi</outputFile>  
+					<intDirectory>target/</intDirectory>
+				</configuration>  
+				<executions>  
+					<execution>  
+						<id>wix</id>  
+						<phase>package</phase>
+						<goals>  
+							<goal>toolset</goal>
+							<goal>candle</goal> 		
+							<goal>light</goal> 				
+						</goals>  
+					</execution> 
+				</executions>  
+			</plugin>
+			
+			
 		</plugins>
 	</build>
 
@@ -223,21 +256,6 @@
 			<version>4.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.deephacks.lmdbjni</groupId>
-			<artifactId>lmdbjni</artifactId>
-			<version>0.4.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.deephacks.lmdbjni</groupId>
-			<artifactId>lmdbjni-win64</artifactId>
-			<version>0.4.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.deephacks.lmdb</groupId>
-			<artifactId>lmdb-win64</artifactId>
-			<version>0.1.2</version>
-		</dependency>
-		<dependency>
 			<groupId>de.ruedigermoeller</groupId>
 			<artifactId>fst</artifactId>
 			<version>2.47</version>
@@ -250,11 +268,6 @@
 		<dependency>
 			<groupId>org.fusesource.leveldbjni</groupId>
 			<artifactId>leveldbjni-win32</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-win64</artifactId>
 			<version>1.8</version>
 		</dependency>
 	</dependencies>

@@ -120,6 +120,7 @@ public class FileImporter implements IFileImporter {
 
         @Override
         protected Boolean doInBackground() throws Exception {
+            System.gc();
             // initialize cache
             if (activePreview != null) {
                 activePreview.dispose();

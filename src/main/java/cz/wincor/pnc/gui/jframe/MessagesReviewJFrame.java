@@ -620,6 +620,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             }
         } catch (Exception e) {
             LOG.error("Cannot close connection to DB", e);
+            JOptionPane.showMessageDialog(this, "Cannot import messages " + e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+
         } finally {
             iterator.close();
             db.close();
