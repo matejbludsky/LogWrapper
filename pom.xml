@@ -167,31 +167,12 @@
 				</executions>
 			</plugin>
 			
-			
-			
-			
-			<plugin>
-				<groupId>com.github.wix-maven</groupId>
-				<artifactId>wix-maven-plugin</artifactId>
-				<extensions>true</extensions>
-				<executions>  
-					<execution>  
-						<id>wix</id>  
-						<phase>package</phase>
-						<goals>  
-							<goal>toolset</goal> 						
-						</goals>  
-					</execution> 
-				</executions>  
-			</plugin>
-			
-			
-			
 			<plugin>
 				<groupId>com.github.wix-maven</groupId>
 				<artifactId>wix-maven-plugin</artifactId>
 				<extensions>true</extensions>
 				<configuration>  
+					<packaging>msi</packaging>
 					<sourceFiles>  
 						<sourceFile>LogWrapper.wix</sourceFile>
 					</sourceFiles>  				
@@ -200,6 +181,7 @@
 						<objectFile>LogWrapper.wixobj</objectFile>  
 					</objectFiles>    
 					<outputFile>LogWrapper.msi</outputFile>  
+					<intDirectory>target/</intDirectory>
 				</configuration>  
 				<executions>  
 					<execution>  
@@ -213,21 +195,6 @@
 					</execution> 
 				</executions>  
 			</plugin>
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 		</plugins>
 	</build>
 

@@ -9,7 +9,7 @@
          <Directory Id="DesktopFolder">
             <Directory Id="INSTALLDIR" Name="LogWrapper">
                <Component Id="ApplicationFiles" Guid="12345678-1234-1234-1234-222222222222">
-                  <File Id="ApplicationFile1" Source="LogWrapper.exe"/>
+                  
                </Component>
             </Directory>
          </Directory>
