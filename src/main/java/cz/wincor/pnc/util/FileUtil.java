@@ -6,13 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**
  * @author matej.bludsky
@@ -24,61 +19,8 @@ public class FileUtil {
 
     private static final Logger LOG = Logger.getLogger(FileUtil.class);
 
-    /**
-     * Merges log files TODO use java NIO ?
-     * 
-     * @param files
-     * @return
-     * @throws IOException
-     */
-    public static File mergeExtractedTmpFiles() throws IOException {
-
-        File path = new File(LogWrapperSettings.TMP_LOCATION);
-
-        File[] files = path.listFiles();
-
-        int increment = 0;
-        StringBuilder content = new StringBuilder();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile() && files[i].getName().endsWith(".tmp")) {
-                content.append(FileUtils.readFileToString(files[i]));
-                if (increment < 150) {
-                    DragAndDropPanel.getInstance().logToTextArea(".", false);
-                    increment = 0;
-                }
-                increment++;
-            }
-        }
-
-        String name = "FINAL" + UUID.randomUUID() + ".logwrapper";
-        File mergedFile = new File(LogWrapperSettings.TMP_LOCATION + "/" + name);
-        FileUtils.write(mergedFile, content);
-
-        // delete .tmp files
-
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile() && files[i].getName().endsWith(".tmp")) {
-                if (files[i].delete()) {
-                    LOG.debug("File : " + files[i].getAbsolutePath() + " deleted");
-                }
-            }
-        }
-
-        return mergedFile;
-
-    }
-
     public static void clearDirectory(String path) throws IOException {
         FileUtil.delete(new File(path));
-    }
-
-    public static void writeToFile(File f, String data) throws IOException {
-        FileUtils.writeStringToFile(f, data);
-
-    }
-
-    public static void clearContent(File f) throws IOException {
-        FileUtils.writeStringToFile(f, "");
     }
 
     public static void delete(File file) throws IOException {

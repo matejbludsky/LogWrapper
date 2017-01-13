@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.jframe;
 
 import java.awt.Dimension;
 import java.awt.Label;
@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.beans.PropertyChangeEvent;
@@ -58,12 +59,11 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
     @Override
     public void renderUI(Object... parameters) throws UIRenderException {
         setTitle("Application settings");
-        setPreferredSize(new Dimension(350, 420));
+        setPreferredSize(new Dimension(350, 480));
         setDefaultLookAndFeelDecorated(true);
         setResizable(false);
-
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation(new Point((int) screenSize.getWidth() / 2 - 150, (int) screenSize.getHeight() / 2 - 225));
+        setLocation(new Point((int) screenSize.getWidth() / 2 - 175, (int) screenSize.getHeight() / 2 - 240));
 
         getContentPane().add(getMainPanel());
         pack();
@@ -75,6 +75,43 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
         mainPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Settings"), BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
         BoxLayout layout = new BoxLayout(this, BoxLayout.PAGE_AXIS);
+
+        Label levelDB = new Label("LevelDB Cache Size in MB");
+        levelDB.setPreferredSize(new Dimension(300, 20));
+
+        JTextField levelDBCache = new JTextField();
+        levelDBCache.setText(Integer.toString(LogWrapperSettings.LEVEL_DB_CACHE_ALLOCATION));
+        levelDBCache.setPreferredSize(new Dimension(300, 20));
+        levelDBCache.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                JTextField source = (JTextField) e.getSource();
+                int cache = Integer.parseInt(source.getText());
+                LogWrapperSettings.LEVEL_DB_CACHE_ALLOCATION = cache;
+                LOG.debug("LMDB_ALLOCATION changed to : " + cache);
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+        });
+
+        levelDBCache.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+                    getToolkit().beep();
+                    e.consume();
+                }
+            }
+        });
 
         Label commTraceNamesLabel = new Label("CommTrace file names filter (regexp)");
         commTraceNamesLabel.setPreferredSize(new Dimension(300, 20));
@@ -100,11 +137,9 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
                 JTextField source = (JTextField) e.getSource();
                 LogWrapperSettings.COMMTRACE_NAME_REGEXP = source.getText();
                 LOG.debug("COMMTRACE_NAMES changed to : " + source.getText());
-
             }
         });
 
-        
         Label traceNamesLabel = new Label("TraceLog file names filter (regexp)");
         traceNamesLabel.setPreferredSize(new Dimension(300, 20));
 
@@ -131,7 +166,7 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
                 LOG.debug("TRACE_NAME_REGEXP changed to : " + source.getText());
 
             }
-        });    
+        });
 
         Label imagesLocationLabel = new Label("Image output location");
         imagesLocationLabel.setPreferredSize(new Dimension(300, 20));
@@ -223,6 +258,8 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
             }
         });
 
+        mainPanel.add(levelDB, layout);
+        mainPanel.add(levelDBCache, layout);
         mainPanel.add(commTraceNamesLabel, layout);
         mainPanel.add(commTraceNames, layout);
         mainPanel.add(traceNamesLabel, layout);
@@ -239,13 +276,11 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
 
         return mainPanel;
     }
-    
 
     @Override
     public void display() {
         repaint();
         setVisible(true);
     }
-
 
 }

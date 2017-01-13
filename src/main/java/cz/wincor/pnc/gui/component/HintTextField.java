@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.component;
 
 import java.awt.Color;
 import java.awt.Graphics;

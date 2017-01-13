@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.types;
 
 import java.awt.Color;
 import java.util.HashSet;

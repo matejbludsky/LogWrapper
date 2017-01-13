@@ -11,10 +11,10 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.GUI.LogWrapperUIJFrame;
 import cz.wincor.pnc.error.FileImportException;
 import cz.wincor.pnc.error.UIRenderException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
+import cz.wincor.pnc.gui.jframe.LogWrapperUIJFrame;
 import cz.wincor.pnc.importer.FileImporter;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.FileUtil;
@@ -27,14 +27,12 @@ public class LogWrapperMain implements Runnable {
     public static void main(String[] args) {
 
         LOG.info("Starting LogWrapper");
-
-        Thread mainThread = new Thread(new LogWrapperMain());
-        mainThread.start();
-
         try {
-            Thread.sleep(1000);
-            LOG.info("Processing arguments");
             cleanENV();
+            Thread mainThread = new Thread(new LogWrapperMain());
+            mainThread.start();
+            Thread.sleep(2000);
+            LOG.info("Processing arguments");
             processArguments(args);
         } catch (Exception e1) {
             LOG.error(e1);
@@ -66,6 +64,8 @@ public class LogWrapperMain implements Runnable {
 
     private static void cleanENV() throws IOException {
 
+        FileUtil.clearDirectory(LogWrapperSettings.TMP_LOCATION);
+
         if (LogWrapperSettings.SOAP_CLEAR_ON_START) {
             FileUtil.clearDirectory(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
         }
@@ -74,6 +74,7 @@ public class LogWrapperMain implements Runnable {
             FileUtil.clearDirectory(LogWrapperSettings.IMAGES_LOCATION);
         }
 
+        Files.createDirectories(Paths.get(LogWrapperSettings.LMDB_LOCATION));
         Files.createDirectories(Paths.get(LogWrapperSettings.IMAGES_LOCATION));
         Files.createDirectories(Paths.get(LogWrapperSettings.SOAPUI_FINAL_LOCATION));
 

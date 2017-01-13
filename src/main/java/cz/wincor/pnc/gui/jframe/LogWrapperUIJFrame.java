@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.jframe;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -28,6 +28,8 @@ import org.apache.log4j.Logger;
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.FileImportException;
 import cz.wincor.pnc.error.UIRenderException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
+import cz.wincor.pnc.gui.component.SettingsPanel;
 import cz.wincor.pnc.importer.FileImporter;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
@@ -116,7 +118,7 @@ public class LogWrapperUIJFrame extends JFrame implements ILogWrapperUIRenderer,
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    AboutMeFrame about = new AboutMeFrame();
+                    AboutMeJFrame about = new AboutMeJFrame();
                     try {
                         about.renderUI();
                     } catch (UIRenderException e1) {

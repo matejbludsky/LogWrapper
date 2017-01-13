@@ -1,4 +1,4 @@
-package cz.wincor.pnc.processor;
+package cz.wincor.pnc.types;
 
 import java.io.File;
 

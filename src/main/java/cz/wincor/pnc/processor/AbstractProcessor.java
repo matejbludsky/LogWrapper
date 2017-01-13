@@ -1,17 +1,13 @@
 package cz.wincor.pnc.processor;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-
-import cz.wincor.pnc.error.TraceLoadingException;
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
 import cz.wincor.pnc.error.ProcessorException;
 import cz.wincor.pnc.settings.LogWrapperSettings;
-import cz.wincor.pnc.util.FileUtil;
 import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
@@ -25,10 +21,7 @@ import cz.wincor.pnc.util.TraceStringUtils;
  */
 public abstract class AbstractProcessor {
 
-    private static final Logger LOG = Logger.getLogger(AbstractProcessor.class);
-
     protected volatile File originalLogFile = null;
-    protected volatile File extractedTmpFile = null;
 
     public static final String[] SOAP_HEADERS = new String[] { "<soap:Envelope", "<soapenv:Envelope", "<S:Envelope" };
     public static final String[] SOAP_FOOTER = new String[] { "</soapenv:Envelope>", "</soap:Envelope", "</S:Envelope>" };
@@ -37,7 +30,6 @@ public abstract class AbstractProcessor {
 
     public AbstractProcessor(File originalLogFile) {
         this.originalLogFile = originalLogFile;
-        extractedTmpFile = new File(LogWrapperSettings.TMP_LOCATION + "/" + UUID.randomUUID() + "_WSCC_REQUEST.tmp");
     }
 
     /**
@@ -48,26 +40,31 @@ public abstract class AbstractProcessor {
     public abstract void process() throws ProcessorException;
 
     /**
-     * Writes String content to a tmp file
+     * provides LogWrapperCacheItem filled with preparsed items that are shared between processors
      * 
-     * @param cache
-     * @throws IOException
+     * @param key
+     * @param message
+     * @return
      */
-    public void writeToTmpFile(StringBuilder cache, File f) throws IOException {
-        FileUtil.writeToFile(f, cache.toString());
-    }
+    protected LogWrapperCacheItem parseMessage(String key, String message) {
 
-    /**
-     * deletes file
-     */
-    protected void deleteFile() {
+        LogWrapperCacheItem item = new LogWrapperCacheItem();
 
-        if (extractedTmpFile != null) {
-            String name = extractedTmpFile.getAbsolutePath();
-            if (extractedTmpFile.delete()) {
-                LOG.info("File deteled :" + name);
-            }
-        }
+        String SEQNumber = TraceStringUtils.extractSEQNumber(key, message);
+        Date clientDate = TraceStringUtils.extractClientDateToDate(key, message);
+        String ATMId = TraceStringUtils.extractATMID(message);
+        String messageType = TraceStringUtils.extractMessageType(key, message);
+        boolean infoTransaction = TraceStringUtils.isInfoTransaction(key, message, messageType);
+
+        item.setSEQNumber(SEQNumber);
+        item.setClientDate(clientDate);
+        item.setATMId(ATMId);
+        item.setMessageType(messageType);
+        item.setInfoTransaction(infoTransaction);
+        item.setMessage(message);
+
+        return item;
+
     }
 
     /**
@@ -154,14 +151,6 @@ public abstract class AbstractProcessor {
 
     public void setOriginalLogFile(File originalLogFile) {
         this.originalLogFile = originalLogFile;
-    }
-
-    public File getExtractedTmpFile() {
-        return extractedTmpFile;
-    }
-
-    public void setExtractedTmpFile(File extractedTmpFile) {
-        this.extractedTmpFile = extractedTmpFile;
     }
 
 }

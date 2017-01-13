@@ -3,29 +3,28 @@ package cz.wincor.pnc.importer;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
 import org.apache.log4j.Logger;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.GUI.MessagesReviewJFrame;
-import cz.wincor.pnc.cache.DataCache;
+import cz.wincor.pnc.cache.LevelDBCache;
 import cz.wincor.pnc.common.IFileImporter;
 import cz.wincor.pnc.error.FileImportException;
-import cz.wincor.pnc.error.TraceLoadingException;
-import cz.wincor.pnc.error.UIRenderException;
+import cz.wincor.pnc.error.ProcessorException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
+import cz.wincor.pnc.gui.jframe.MessagesReviewJFrame;
 import cz.wincor.pnc.processor.AbstractProcessor;
-import cz.wincor.pnc.processor.PCELogType;
-import cz.wincor.pnc.processor.PCEServerLog;
 import cz.wincor.pnc.processor.ProcessorFactory;
 import cz.wincor.pnc.settings.LogWrapperSettings;
+import cz.wincor.pnc.types.PCELogType;
+import cz.wincor.pnc.types.PCEServerLog;
 import cz.wincor.pnc.util.FileUtil;
 
 /**
@@ -39,6 +38,8 @@ public class FileImporter implements IFileImporter {
     public static Set<String> supportedExtensions;
 
     private static final Logger LOG = Logger.getLogger(DragAndDropPanel.class);
+
+    private MessagesReviewJFrame activePreview = null;
 
     /**
      * add supported formats
@@ -119,7 +120,12 @@ public class FileImporter implements IFileImporter {
 
         @Override
         protected Boolean doInBackground() throws Exception {
+            // initialize cache
+            if (activePreview != null) {
+                activePreview.dispose();
+            }
 
+            LevelDBCache.getInstance().initialize();
             List<File> supported = new ArrayList<File>();
             try {
                 FileUtil.clearDirectory(LogWrapperSettings.TMP_LOCATION);
@@ -129,7 +135,6 @@ public class FileImporter implements IFileImporter {
                     LOG.info("Importing dropped file : " + droppedFile.getAbsolutePath());
 
                     Files.walk(droppedFile.toPath()).forEach(path -> isSupported(path.toFile(), supported));
-
                 }
 
                 DragAndDropPanel.getInstance().renderTextAreaLogFiles(supported);
@@ -153,25 +158,16 @@ public class FileImporter implements IFileImporter {
 
                 // load MessageReviewFrame
                 if (!supported.isEmpty()) {
-                    DragAndDropPanel.getInstance().logToTextArea("Merging Data", true);
-                    FileUtil.mergeExtractedTmpFiles();
-                    DragAndDropPanel.getInstance().logToTextArea("Initializing cache", true);
-                    DataCache.getInstance().initializeCache();
-                    MessagesReviewJFrame preview = new MessagesReviewJFrame();
-                    preview.renderUI();
+                    activePreview = new MessagesReviewJFrame();
+                    activePreview.renderUI();
                 } else {
                     DragAndDropPanel.getInstance().logToTextArea("No files supported", true);
                 }
 
                 setProgress(100);
-                System.gc();
-
-            } catch (IOException e) {
+            } catch (ProcessorException e) {
                 LOG.error("Cannot import files ", e);
-            } catch (TraceLoadingException e) {
-                LOG.error("Cannot load trace files ", e);
-            } catch (UIRenderException e) {
-                LOG.error("Cannot render MessagesReviewJFrame ", e);
+                JOptionPane.showMessageDialog(DragAndDropPanel.getInstance(), e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
             return true;

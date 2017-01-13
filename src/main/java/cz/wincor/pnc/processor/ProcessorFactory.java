@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.processor.impl.CommTraceProcessor;
 import cz.wincor.pnc.processor.impl.TraceLogProcessor;
+import cz.wincor.pnc.types.PCEServerLog;
 
 /**
  * 

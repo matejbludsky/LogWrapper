@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.jframe;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -27,9 +27,9 @@ import cz.wincor.pnc.error.UIRenderException;
  * 
  */
 
-public class AboutMeFrame extends JFrame implements ILogWrapperUIRenderer, WindowListener {
+public class AboutMeJFrame extends JFrame implements ILogWrapperUIRenderer, WindowListener {
 
-    private static final Logger LOG = Logger.getLogger(AboutMeFrame.class);
+    private static final Logger LOG = Logger.getLogger(AboutMeJFrame.class);
     /**
      * 
      */
@@ -48,7 +48,7 @@ public class AboutMeFrame extends JFrame implements ILogWrapperUIRenderer, Windo
             setPreferredSize(new Dimension(300, 180));
             setTitle("About");
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            setLocation(new Point((int) screenSize.getWidth() / 2 - 150, (int) screenSize.getHeight() / 2 - 85));
+            setLocation(new Point((int) screenSize.getWidth() / 2 - 150, (int) screenSize.getHeight() / 2 - 90));
 
             JPanel panel = new JPanel();
             panel.setPreferredSize(new Dimension(300, 190));

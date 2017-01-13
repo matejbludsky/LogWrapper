@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.jframe;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -24,6 +24,7 @@ import java.awt.event.WindowListener;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
@@ -44,6 +45,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -53,7 +55,6 @@ import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.text.PlainDocument;
 
@@ -61,12 +62,18 @@ import org.apache.log4j.Logger;
 import org.bounce.text.xml.XMLEditorKit;
 import org.bounce.text.xml.XMLStyleConstants;
 import org.imgscalr.Scalr;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBIterator;
 
-import cz.wincor.pnc.GUI.MessageTypeManager.Message;
-import cz.wincor.pnc.cache.DataCache;
-import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
+import cz.wincor.pnc.cache.LevelDBCache;
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
+import cz.wincor.pnc.gui.component.ImageJLabel;
+import cz.wincor.pnc.gui.component.LogWrapperTableModel;
+import cz.wincor.pnc.types.MessageTypeManager;
+import cz.wincor.pnc.types.MessageTypeManager.Message;
 import cz.wincor.pnc.util.ImageUtil;
 import cz.wincor.pnc.util.SystemUtil;
 import cz.wincor.pnc.util.TraceStringUtils;
@@ -124,8 +131,9 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             previewScrollablePane.getVerticalScrollBar().setUnitIncrement(20);
 
             JScrollPane tableScrollablePane = new JScrollPane(resultTable);
+            tableScrollablePane.getVerticalScrollBar().setUnitIncrement(40);
 
-            loadContentFromCache(DataCache.getInstance().getCache());
+            loadContentFromCache();
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
             split.setDividerLocation(400);
             split.setResizeWeight(0.5);
@@ -145,6 +153,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
     /**
      * Method is rendering preview area panel
+     * 
      * @return
      */
     private JPanel RenderPreviewPanel() {
@@ -176,8 +185,14 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             @Override
             public void actionPerformed(ActionEvent e) {
                 String key = (String) resultTable.getValueAt(resultTable.getSelectedRow(), 7);
-                LogWrapperCacheItem item = DataCache.getInstance().getCache().get(key);
+                LogWrapperCacheItem item = LevelDBCache.getInstance().get(key);
                 item.setMessage(dataPreview.getText());
+                try {
+                    LevelDBCache.getInstance().put(key, item);
+                } catch (IOException e1) {
+                    LOG.error("Cannot save", e1);
+                    JOptionPane.showMessageDialog(DragAndDropPanel.getInstance(), "Cannot save altered XML", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
 
@@ -281,7 +296,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 StringBuilder text = new StringBuilder();
                 for (int row = 0; row < resultTable.getModel().getRowCount(); row++) {
                     if ((boolean) resultTable.getValueAt(row, 0)) {
-                        text.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(resultTable.getValueAt(row, 7)).getMessage()));
+                        text.append(SystemUtil.formatXML(LevelDBCache.getInstance().get(resultTable.getValueAt(row, 7).toString()).getMessage()));
                     }
                 }
 
@@ -521,7 +536,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
                 for (int i = 0; i < rowsSelected.length; i++) {
                     String key = (String) resultTable.getValueAt(rowsSelected[i], 7);
-                    builder.append(SystemUtil.formatXML(DataCache.getInstance().getCache().get(key).getMessage()));
+                    builder.append(SystemUtil.formatXML(LevelDBCache.getInstance().get(key).getMessage()));
                 }
 
                 SystemUtil.copyToClipboard(builder.toString());
@@ -570,7 +585,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * @param key
      */
     private void prettyPrintMessageTextArea(String key) {
-        String messageToPrint = DataCache.getInstance().getCache().get(key).getMessage();
+        String messageToPrint = LevelDBCache.getInstance().get(key).getMessage();
         dataPreview.setText(SystemUtil.formatXML(messageToPrint.trim()));
         dataPreview.setCaretPosition(0);
     }
@@ -579,38 +594,35 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * Loads cache into the JTable
      * 
      * @param cache
+     * @throws IOException
+     * @throws ClassNotFoundException
      */
-    private void loadContentFromCache(Map<String, LogWrapperCacheItem> cache) {
+    private void loadContentFromCache() throws ClassNotFoundException, IOException {
 
         DragAndDropPanel.getInstance().logToTextArea("Loading data into preview", true);
 
-        DefaultTableModel model = (DefaultTableModel) resultTable.getModel();
-
+        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
         int increment = 0;
-        for (Map.Entry<String, LogWrapperCacheItem> entry : cache.entrySet()) {
-            if (entry.getValue() == null) {
-                continue;
+        DB db = null;
+        DBIterator iterator = null;
+        try {
+            db = LevelDBCache.getInstance().openDatabase();
+            iterator = db.iterator();
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                String key = new String(iterator.peekNext().getKey());
+                LogWrapperCacheItem item = LevelDBCache.getInstance().convertFromBytes(iterator.peekNext().getValue());
+                model.addRow(item, key);
+                increment++;
+                if (increment > 50) {
+                    DragAndDropPanel.getInstance().logToTextArea(".", false);
+                    increment = 0;
+                }
             }
-            String key = entry.getKey();
-            LogWrapperCacheItem item = entry.getValue();
-
-            String SEQNumber = TraceStringUtils.extractSEQNumber(key, item.getMessage());
-            Date serverDate = item.getServerDate();
-            Date clientDate = TraceStringUtils.extractClientDateToDate(key, item.getMessage());
-            String ATMId = TraceStringUtils.extractATMID(item.getMessage());
-            String messageType = TraceStringUtils.extractMessageType(key, item.getMessage());
-            boolean infoTransaction = TraceStringUtils.isInfoTransaction(key, item.getMessage(), messageType);
-
-            Object[] data = new Object[] { false, SEQNumber, serverDate, clientDate, ATMId, messageType, infoTransaction, key };
-
-            model.addRow(data);
-            LOG.debug("Row added : " + data.toString());
-
-            if (increment > cache.entrySet().size() / 25) {
-                DragAndDropPanel.getInstance().logToTextArea(".", false);
-                increment = 0;
-            }
-            increment++;
+        } catch (Exception e) {
+            LOG.error("Cannot close connection to DB", e);
+        } finally {
+            iterator.close();
+            db.close();
         }
 
     }
@@ -633,10 +645,8 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     public void windowClosing(WindowEvent e) {
         setVisible(false);
         dispose();
-        DataCache.getInstance().clearAll();
         LOG.info("MessagesReviewJFrame window closed");
         LogWrapperUIJFrame.getInstance().display();
-        System.gc();
     }
 
     @Override

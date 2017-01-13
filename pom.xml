@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cz.wincor.pnc</groupId>
 	<artifactId>logwrapper</artifactId>
-	<version>0.0.7</version>
+	<version>1.0.0</version>
 	<name>LogWapper</name>
 
 	<properties>
@@ -222,8 +222,41 @@
 			<artifactId>imgscalr-lib</artifactId>
 			<version>4.2</version>
 		</dependency>
-
-
+		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni</artifactId>
+			<version>0.4.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni-win64</artifactId>
+			<version>0.4.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deephacks.lmdb</groupId>
+			<artifactId>lmdb-win64</artifactId>
+			<version>0.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>de.ruedigermoeller</groupId>
+			<artifactId>fst</artifactId>
+			<version>2.47</version>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-all</artifactId>
+			<version>1.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-win32</artifactId>
+			<version>1.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-win64</artifactId>
+			<version>1.8</version>
+		</dependency>
 	</dependencies>
 </project>
 

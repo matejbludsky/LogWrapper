@@ -7,9 +7,12 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
+import org.iq80.leveldb.DB;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.error.TraceLoadingException;
+import cz.wincor.pnc.cache.LevelDBCache;
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
+import cz.wincor.pnc.error.ProcessorException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
 import cz.wincor.pnc.processor.AbstractProcessor;
 import cz.wincor.pnc.util.TraceStringUtils;
 
@@ -38,19 +41,16 @@ public class CommTraceProcessor extends AbstractProcessor {
      * Method is going to analyze each line and extract only requests SOAP messages
      */
     @Override
-    public void process() throws TraceLoadingException {
+    public void process() throws ProcessorException {
         if (originalLogFile == null) {
-            throw new TraceLoadingException("Log File cannot be null");
+            throw new ProcessorException("Log File cannot be null");
         }
-        try {
-            LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
-            DragAndDropPanel.getInstance().logToTextArea("Extracting file : " + originalLogFile.getName(), true);
-            int numberOfReadMessages = readWSCCRequestsIntoTmpFile();
-            DragAndDropPanel.getInstance().logToTextArea(numberOfReadMessages + " WSCC Messages found", true);
+        LOG.info("Processing file : " + originalLogFile.getAbsolutePath());
+        DragAndDropPanel.getInstance().logToTextArea("Extracting file : " + originalLogFile.getName(), true);
+        DragAndDropPanel.getInstance().logToTextArea("Loading ", true);
+        int numberOfReadMessages = readWSCCRequestsIntoCache();
+        DragAndDropPanel.getInstance().logToTextArea(numberOfReadMessages + " WSCC Messages found", true);
 
-        } catch (Exception e) {
-            LOG.error("Cannot extract comm trace " + originalLogFile.getAbsolutePath(), e);
-        }
     }
 
     /**
@@ -58,17 +58,18 @@ public class CommTraceProcessor extends AbstractProcessor {
      * 
      * @throws IOException
      */
-    private int readWSCCRequestsIntoTmpFile() throws IOException {
+    private int readWSCCRequestsIntoCache() throws ProcessorException {
 
         String WSCCMessage = null;
         int messageCount = 0;
+        int increment = 0;
         boolean activeMessage = false;
-
-        StringBuilder messages = new StringBuilder();
-
-        LineIterator it;
-        it = FileUtils.lineIterator(originalLogFile, "UTF-8");
+        LineIterator it = null;
+        DB db = null;
         try {
+            db = LevelDBCache.getInstance().openDatabase();
+            it = FileUtils.lineIterator(originalLogFile, "UTF-8");
+
             while (it.hasNext()) {
                 String currentLine = it.nextLine();
                 if (currentLine.startsWith(WSCC_TAG) || activeMessage) {
@@ -81,21 +82,32 @@ public class CommTraceProcessor extends AbstractProcessor {
                         String message = filterSOAPMessage(WSCCMessage);
                         if (TraceStringUtils.isWSCCMessage(message) && isCompliant(message)) {
                             String serverDate = WSCCMessage.substring(WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length(), WSCCMessage.indexOf(WSCC_TAG) + WSCC_TAG.length() + 23);
-                            messages.append(key + AbstractProcessor.SEPARATOR + serverDate + AbstractProcessor.SEPARATOR + message + System.lineSeparator());
+                            LogWrapperCacheItem item = parseMessage(key, message);
+                            item.setServerDate(TraceStringUtils.getDateFromString(serverDate));
+                            db.put(key.getBytes(), LevelDBCache.getInstance().convertToBytes(item));
                             messageCount++;
+                            increment++;
+                            if (increment > 50) {
+                                DragAndDropPanel.getInstance().logToTextArea(".", false);
+                                increment = 0;
+                            }
                         }
                         WSCCMessage = "";
                         activeMessage = false;
                     }
                 }
             }
-
-            writeToTmpFile(messages, getExtractedTmpFile());
-
+        } catch (Exception e) {
+            LOG.error("Cannot read comm trace", e);
+            throw new ProcessorException("Cannot process file : " + originalLogFile.getName() + " Error : " + e.getMessage());
         } finally {
-            LineIterator.closeQuietly(it);
-
-            LOG.info("Cache Prepared");
+            try {
+                db.close();
+                LineIterator.closeQuietly(it);
+                LOG.info("Cache Prepared");
+            } catch (IOException e) {
+                LOG.error("Cannot close resource", e);
+            }
         }
 
         return messageCount;

@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.jframe;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -14,11 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -41,15 +37,17 @@ import javax.swing.table.TableModel;
 
 import org.apache.log4j.Logger;
 
-import cz.wincor.pnc.cache.DataCache;
-import cz.wincor.pnc.cache.DataCache.LogWrapperCacheItem;
+import cz.wincor.pnc.cache.LevelDBCache;
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
 import cz.wincor.pnc.export.SOAPUIExporter;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
+import cz.wincor.pnc.gui.component.HintTextField;
 import cz.wincor.pnc.settings.LogWrapperSettings;
+import cz.wincor.pnc.util.FileUtil;
 import cz.wincor.pnc.util.ImageUtil;
 import cz.wincor.pnc.util.SystemUtil;
-import cz.wincor.pnc.util.TraceStringUtils;
 
 /**
  * @author matej.bludsky
@@ -88,7 +86,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        setLocation(new Point((int) screenSize.getWidth() / 2 - 200, (int) screenSize.getHeight() / 2 - 125));
+        setLocation(new Point((int) screenSize.getWidth() / 2 - 200, (int) screenSize.getHeight() / 2 - 150));
 
         final JPanel mainPanel = new JPanel();
         mainPanel.setPreferredSize(new Dimension(450, 300));
@@ -246,7 +244,12 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
                         }
 
                         LOG.debug("Using final path for soap ui :" + filePath);
-                        List<String> messagesCache = prepareCacheForSoapUIProcessor();
+                        List<LogWrapperCacheItem> messagesCache = prepareCacheForSoapUIProcessor();
+
+                        if (messagesCache.isEmpty()) {
+                            JOptionPane.showMessageDialog(progressBar, "No messages to export selected", "Warning", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
 
                         SOAPUIExporter worker = new SOAPUIExporter(messagesCache, filePath);
                         worker.addPropertyChangeListener(new PropertyChangeListener() {
@@ -317,11 +320,14 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
         @Override
         protected Boolean doInBackground() throws Exception {
+
+            FileUtil.clearDirectory(LogWrapperSettings.IMAGES_LOCATION);
+
             List<String> messages = new ArrayList<>();
             List<String> savedFiles = new ArrayList<>();
             for (int row = 0; row < model.getRowCount(); row++) {
                 if ((boolean) model.getValueAt(row, 0)) {
-                    String message = DataCache.getInstance().getCache().get(model.getValueAt(row, 7)).getMessage();
+                    String message = LevelDBCache.getInstance().get(model.getValueAt(row, 7).toString()).getMessage();
                     messages.add(message);
                 }
             }
@@ -368,28 +374,20 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
      * 
      * @return
      */
-    private List<String> prepareCacheForSoapUIProcessor() {
-        List<String> tmpCache = new ArrayList<String>();
-        List<String> messagesCache = new ArrayList<String>();
+    private List<LogWrapperCacheItem> prepareCacheForSoapUIProcessor() {
+        List<LogWrapperCacheItem> tmpCache = new ArrayList<LogWrapperCacheItem>();
 
         for (int row = 0; row < model.getRowCount(); row++) {
             if ((boolean) model.getValueAt(row, 0)) {
-                tmpCache.add(model.getValueAt(row, 7).toString() + "&" + DataCache.getInstance().getCache().get(model.getValueAt(row, 7)).getMessage());
+                tmpCache.add(LevelDBCache.getInstance().get(model.getValueAt(row, 7).toString()));
             }
         }
 
         // entry in key&message
         // sort by date
-        Comparator<String> comp = (String a, String b) -> {
-
+        Comparator<LogWrapperCacheItem> comp = (LogWrapperCacheItem a, LogWrapperCacheItem b) -> {
             try {
-                String A = a.substring(0, a.indexOf("&"));
-                String B = b.substring(0, b.indexOf("&"));
-
-                Date dateA = DataCache.getInstance().getCache().get(A).getServerDate();
-                Date dateB = DataCache.getInstance().getCache().get(B).getServerDate();
-
-                if (dateB.before(dateA)) {
+                if (b.getServerDate().before(a.getServerDate())) {
                     return 1;
                 } else {
                     return -1;
@@ -403,14 +401,7 @@ public class ExportJFrame extends JFrame implements ILogWrapperUIRenderer {
 
         Collections.sort(tmpCache, comp);
 
-        // remove key from the list
-        for (Iterator<String> iterator = tmpCache.iterator(); iterator.hasNext();) {
-            String string = (String) iterator.next();
-            string = string.substring(string.indexOf("&") + 1, string.length());
-            messagesCache.add(string);
-        }
-
-        return messagesCache;
+        return tmpCache;
     }
 
     public JProgressBar getProgressBar() {

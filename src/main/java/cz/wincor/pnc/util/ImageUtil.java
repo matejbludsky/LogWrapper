@@ -1,6 +1,5 @@
 package cz.wincor.pnc.util;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.media.jai.PlanarImage;
-import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
@@ -20,8 +18,8 @@ import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
-import cz.wincor.pnc.cache.DataCache;
+import cz.wincor.pnc.cache.LevelDBCache;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
 
 /**
  * @author matej.bludsky
@@ -90,7 +88,7 @@ public class ImageUtil {
         List<String> imageLocations = new ArrayList<>();
         LOG.debug("Analysing preview area");
         // transform check base64 image to file
-        imageLocations = saveImagesToFile(DataCache.getInstance().getCache().get(keyID).getMessage());
+        imageLocations = saveImagesToFile(LevelDBCache.getInstance().get(keyID).getMessage());
         for (Iterator<String> iterator = imageLocations.iterator(); iterator.hasNext();) {
             String string = (String) iterator.next();
             DragAndDropPanel.getInstance().logToTextArea("Image saved : " + string, true);

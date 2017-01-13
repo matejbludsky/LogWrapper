@@ -1,8 +1,10 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.component;
 
 import java.util.Vector;
 
 import javax.swing.table.DefaultTableModel;
+
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
 
 /**
  * @author matej.bludsky
@@ -31,6 +33,12 @@ public class LogWrapperTableModel extends DefaultTableModel {
     public void setValueAt(Object aValue, int row, int column) {
         Vector rowVector = (Vector) dataVector.elementAt(row);
         rowVector.setElementAt(aValue, column);
+    }
+
+    public void addRow(LogWrapperCacheItem item, String key) {
+        Object[] data = new Object[] { false, item.getSEQNumber(), item.getServerDate(), item.getClientDate(), item.getATMId(), item.getMessageType(), item.isInfoTransaction(), key };
+
+        super.addRow(data);
     }
 
 }

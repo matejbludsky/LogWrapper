@@ -1,4 +1,4 @@
-package cz.wincor.pnc.GUI;
+package cz.wincor.pnc.gui.component;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 
 import cz.wincor.pnc.common.ILogWrapperUIRenderer;
 import cz.wincor.pnc.error.UIRenderException;
+import cz.wincor.pnc.gui.jframe.LogWrapperUIJFrame;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**

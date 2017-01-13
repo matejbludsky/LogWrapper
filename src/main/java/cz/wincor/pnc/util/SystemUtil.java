@@ -16,7 +16,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
-import cz.wincor.pnc.GUI.DragAndDropPanel;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 
 /**

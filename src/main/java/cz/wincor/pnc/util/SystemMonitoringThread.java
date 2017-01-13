@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import com.sun.management.OperatingSystemMXBean;
 
-import cz.wincor.pnc.GUI.LogWrapperUIJFrame;
+import cz.wincor.pnc.gui.jframe.LogWrapperUIJFrame;
 
 /**
  * @author matej.bludsky

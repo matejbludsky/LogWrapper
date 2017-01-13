@@ -102,32 +102,6 @@ public class TraceStringUtils {
         return time;
     }
 
-    /**
-     * Extracts ATM date from the XML tag
-     * 
-     * Example XML entry
-     * 
-     * <ClientRequestTime>1469486247968</ClientRequestTime>
-     * 
-     * @param message
-     */
-    public static String extractClientDateToString(String key, String message) {
-        if (isNull(message)) {
-            return null;
-        }
-        String time;
-        try {
-            int startTag = message.indexOf("<ClientRequestTime>");
-            int endTag = message.indexOf("</ClientRequestTime>");
-
-            time = new SimpleDateFormat(DATE_FORMAT_OUTPUT).format(Long.parseLong(message.substring(startTag + 19, endTag)));
-            LOG.debug("Row id : " + key + " Extracted ATM date " + time);
-        } catch (Exception e) {
-            LOG.error("Cannot extract ATM Date, message : " + key);
-            time = "-";
-        }
-        return time;
-    }
 
     /**
      * Extracts ATM ID from the XML tag
@@ -155,31 +129,6 @@ public class TraceStringUtils {
         return atmId;
     }
 
-    /**
-     * Extracts ATM ID from the XML tag
-     * 
-     * Example XML entry
-     * 
-     * <ClientId>66000</ClientId>
-     * 
-     * @param message
-     */
-    public static String extractClientRequestNumber(String message) {
-        if (isNull(message)) {
-            return null;
-        }
-        String reqNumber = null;
-        try {
-            int startTag = message.indexOf("<ClientRequestNumber>");
-            int endTag = message.indexOf("</ClientRequestNumber>");
-
-            reqNumber = message.substring(startTag + 22, endTag);
-            LOG.debug("Extracted client sequence ID " + reqNumber);
-        } catch (Exception e) {
-            LOG.error("Cannot extract ATM ID");
-        }
-        return reqNumber;
-    }
 
     /**
      * Extracts ATM ID from the XML tag

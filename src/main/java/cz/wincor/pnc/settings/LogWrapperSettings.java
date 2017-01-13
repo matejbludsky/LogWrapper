@@ -32,6 +32,9 @@ public class LogWrapperSettings {
     public static SettingValue ATM_ID = new SettingValue("ClientId", "");
 
     public static String TMP_LOCATION = currentDir + "/tmp";
+    public static String LMDB_LOCATION = currentDir + "/tmp/db";
+
+    public static int LEVEL_DB_CACHE_ALLOCATION = 100;
 
     public static String COMMTRACE_NAME_REGEXP = "/\bCommTrace\b/";
     public static String TRACE_NAME_REGEXP = "/\bTraceLog\b/";
@@ -73,7 +76,7 @@ public class LogWrapperSettings {
         prop.put("soapui.location", SOAPUI_FINAL_LOCATION);
         prop.put("soapui.clear", Boolean.toString(SOAP_CLEAR_ON_START));
         prop.put("soapui.clear.before", Boolean.toString(SOAP_CLEAR_BEFORE));
-
+        prop.put("cache.size", Integer.toString(LEVEL_DB_CACHE_ALLOCATION));
         OutputStream output = null;
 
         try {
@@ -111,6 +114,7 @@ public class LogWrapperSettings {
             SOAPUI_FINAL_LOCATION = prop.getProperty("soapui.location");
             SOAP_CLEAR_ON_START = Boolean.parseBoolean(prop.getProperty("soapui.clear"));
             SOAP_CLEAR_BEFORE = Boolean.parseBoolean(prop.getProperty("soapui.clear.before"));
+            LEVEL_DB_CACHE_ALLOCATION = Integer.parseInt(prop.getProperty("cache.size"));
         } catch (IOException e) {
             LOG.error("cannot read properties");
         } finally {

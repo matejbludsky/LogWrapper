@@ -3,20 +3,22 @@ package cz.wincor.pnc.export;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import cz.wincor.pnc.cache.LogWrapperCacheItem;
 import cz.wincor.pnc.error.ProcessorException;
 import cz.wincor.pnc.error.SOAPUITransformationException;
+import cz.wincor.pnc.gui.component.DragAndDropPanel;
 import cz.wincor.pnc.settings.LogWrapperSettings;
 import cz.wincor.pnc.util.BindingTranslator;
 import cz.wincor.pnc.util.BindingTranslator.BindingType;
@@ -46,11 +48,11 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
     public static String UUID_REQUEST = "$UUID$";
     public static String ENDPOINT = "$ENDPOINT$";
     public static String TEST_STEP_NAME = "$TEST_STEP_NAME$";
-    private List<String> cache = new ArrayList<String>();
+    private List<LogWrapperCacheItem> cache = new ArrayList<LogWrapperCacheItem>();
 
     private String finalFilePath = LogWrapperSettings.normalizeDir(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
 
-    public SOAPUIExporter(List<String> cache, String finalPath) {
+    public SOAPUIExporter(List<LogWrapperCacheItem> cache, String finalPath) {
         super();
         this.cache = cache;
         if (finalPath != null) {
@@ -128,8 +130,10 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
 
         StringBuilder suites = new StringBuilder();
         // for each message create test suite
-        for (Iterator iterator = cache.iterator(); iterator.hasNext();) {
-            String request = (String) iterator.next();
+        for (Iterator<LogWrapperCacheItem> iterator = cache.iterator(); iterator.hasNext();) {
+
+            LogWrapperCacheItem cacheItem = iterator.next();
+            String request = cacheItem.getMessage();
             // ignore responses
             if (!TraceStringUtils.isRequestMessage(request)) {
                 continue;
@@ -141,7 +145,7 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
                 BindingType binding = BindingTranslator.fromWSCCRequest(request);
                 template = replaceBinding(template, binding.getBinding());
                 template = replaceOperationAndTestStepName(template, request, binding);
-                template = replaceRequestName(template, request);
+                template = replaceRequestName(template, cacheItem.getMessageType());
                 template = replaceUUID(template);
                 template = replaceEndpoint(template, binding);
                 template = insertRequest(template, request);
@@ -201,12 +205,8 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
         return template = template.replace(TEST_SUITE_NAME, message);
     }
 
-    private String replaceTestStepName(String template, String message) {
-        return template = template.replace(TEST_STEP_NAME, TraceStringUtils.extractMessageType(null, message));
-    }
-
-    private String replaceRequestName(String template, String message) {
-        return template = template.replace(REQUEST_NAME, TraceStringUtils.extractMessageType(null, message));
+    private String replaceRequestName(String template, String messageType) {
+        return template = template.replace(REQUEST_NAME, messageType);
     }
 
     private String replaceBinding(String template, String binding) {
