@@ -237,7 +237,14 @@
 			<artifactId>ini4j</artifactId>
 			<version>0.5.4</version>
 		</dependency>
-		
+
+        <dependency>
+            <groupId>${wix.groupId}</groupId>
+            <artifactId>wix-toolset</artifactId>
+            <version>${wix.version}</version>
+            <type>wixext</type>
+            <classifier>WixUIExtension</classifier>
+        </dependency>
 
 
 
