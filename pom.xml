@@ -13,7 +13,7 @@
 		<java.main.class>cz.wincor.pnc.main.LogWapperMain</java.main.class>
 		<logWrapper.version>${project.version}</logWrapper.version>
 		<wix.groupId>org.wixtoolset.maven</wix.groupId>
-		<wix.version>3.9.2</wix.version>
+		<wix.version>3.10.2</wix.version>
 	</properties>
 
 	<developers>
@@ -57,6 +57,7 @@
 					</execution>
 				</executions>
 			</plugin>
+						
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -64,11 +65,9 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-
 				</configuration>
 			</plugin>
-
-			<plugin>
+		  	<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>1.7.1</version>
@@ -90,7 +89,8 @@
 						</transformer>
 					</transformers>
 				</configuration>
-			</plugin>
+			</plugin>  
+			
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
@@ -104,7 +104,7 @@
 						</goals>
 						<configuration>
 							<headerType>gui</headerType>
-							<jar>${project.build.directory}/${artifactId}-${version}-shaded.jar</jar>
+							<jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
 							<outfile>${project.build.directory}/LogWrapper.exe</outfile>
 							<downloadUrl>http://java.com/download</downloadUrl>
 							<classPath>
@@ -167,9 +167,10 @@
 				</executions>
 			</plugin>
 			
-			<plugin>
+			<!-- <plugin>
 				<groupId>com.github.wix-maven</groupId>
 				<artifactId>wix-maven-plugin</artifactId>
+				<version>0.1.0</version>
 				<extensions>true</extensions>
 				<configuration>  
 					<packaging>msi</packaging>
@@ -189,12 +190,14 @@
 						<phase>package</phase>
 						<goals>  
 							<goal>toolset</goal>
+							<goal>unpack-dependencies</goal>
 							<goal>candle</goal> 		
 							<goal>light</goal> 				
 						</goals>  
 					</execution> 
 				</executions>  
-			</plugin>
+			</plugin> -->
+		
 		</plugins>
 	</build>
 
@@ -238,13 +241,13 @@
 			<version>0.5.4</version>
 		</dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>${wix.groupId}</groupId>
             <artifactId>wix-toolset</artifactId>
             <version>${wix.version}</version>
             <type>wixext</type>
             <classifier>WixUIExtension</classifier>
-        </dependency>
+        </dependency> -->
 
 
 
