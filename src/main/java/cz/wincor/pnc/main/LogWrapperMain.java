@@ -29,16 +29,22 @@ public class LogWrapperMain implements Runnable {
         LOG.info("Starting LogWrapper");
         try {
             cleanENV();
-            Thread mainThread = new Thread(new LogWrapperMain());
-            mainThread.start();
-            Thread.sleep(2000);
-            LOG.info("Processing arguments");
-            processArguments(args);
+            //VersionHandler manages the version checking and the response of user to continue or stop
+            if (VersionHandler.continueWithCurrenVersion()) {
+           
+                Thread mainThread = new Thread(new LogWrapperMain());
+                mainThread.start();
+                Thread.sleep(2000);
+                LOG.info("Processing arguments");
+                processArguments(args);
+            }
         } catch (Exception e1) {
             LOG.error(e1);
         }
 
     }
+
+   
 
     @Override
     public void run() {
@@ -83,12 +89,13 @@ public class LogWrapperMain implements Runnable {
     /**
      * Iterates over arguments given and import files
      * 
+     * It also reads the mave.properties file to check on the current version of the program.
+     * 
      * @param args
      * @throws FileImportException
      */
     private static void processArguments(String[] args) throws FileImportException {
         if (args != null) {
-
             List<File> files = new ArrayList<>();
             for (int i = 0; i < args.length; i++) {
                 File f = createFile(args[i]);
