@@ -37,28 +37,31 @@ public class VersionHandler {
         Optional<String> pomVersion = getVersionFromPomFile();
         
         if (pomVersionNewer (mavenVersion, pomVersion)) {
+            //POM version is newer, so we are NOT up to date, false
             return false;
         }
         
+        //POM version is not newer (equals also works), so we are up to date, true
         return true;
     }
 
     private static boolean pomVersionNewer(Optional<String> mavenVersion, Optional<String> pomVersion) {
         // compares the maven with the pom version.
         //For now, we just compare a version with three different numbers, separated with dots, and with the most significant version
-        //at the left
+        //at the left -> numerical value
         
         //convert to actual strings for comparision. We get an empty string if the values were empty.
         String mavenVer = mavenVersion.orElse("");
         String pomVer = pomVersion.orElse("");
-                
-        //compare by array positions
-       
-                    
-                mavenVer.toCharArray();
         
+        //convert to integers and compare numerically
+        mavenVer = mavenVer.replaceAll("\\.","");
+        pomVer = pomVer.replaceAll("\\.","");
+        int mavenVerInt = Integer.parseInt(mavenVer);
+        int pomVerInt = Integer.parseInt(pomVer);
         
-        return false;
+        //we return true ONLY if the POM has a newer version, a greater numerically value
+        return (pomVerInt > mavenVerInt);
     }
 
 
@@ -67,15 +70,15 @@ public class VersionHandler {
         //I need the URL fo the file, then scrap it and get the version number.
         //tags are: <version>"version</version>
         
-        
-        return null;
+        Optional<String> value = Optional.of("2.1.0");
+        return value;
     }
 
 
     private static Optional<String> getVersionFromMavenFile() {
         //this method extracts the version from the maven.properties file.
         //this code is a copy of the one at the AboutMeJFrame class.
-        java.io.InputStream is = VersionHandler.class.getClassLoader().getResourceAsStream("/maven.properties");
+        java.io.InputStream is = VersionHandler.class.getResourceAsStream("/maven.properties");
         java.util.Properties p = new Properties();
         try {
             p.load(is);
