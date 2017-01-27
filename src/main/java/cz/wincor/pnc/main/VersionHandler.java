@@ -12,8 +12,10 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 /*
  * This class handles the version checking, the message to the user, and the user response to continue or just stop to download
@@ -83,13 +85,11 @@ public class VersionHandler {
         //         -we have a proxy also. 
         
         
-        
-        
         //TO DO: get the link variable from the properties/conf file
         Optional<String> pomVersion = null;
 
-        //this is the actual link.
-        String link = "https://github.com/matejbludsky/LogWrapper/blob/master/pom.xml";
+        //this is the actual link to the RAW file, so it comes with XML tags, no need to decofied the HTML
+        String link = "https://raw.githubusercontent.com/matejbludsky/LogWrapper/master/pom.xml";
         URL pomURL;
         HttpURLConnection pomHttp;
         try {
@@ -102,9 +102,8 @@ public class VersionHandler {
             pomHttp.connect();
 
             int responseHeader = pomHttp.getResponseCode();
-
             
-            // check that the answer is correct, we are getting the document
+            //TO DO: check for redirects and only accept the document if we get a 200.
             if (responseHeader == 200) {
                 // We know there should not be that many lines before we hit the version tag,
                 // but I don't want to risk the tag being in several lines or any other ill format issue
@@ -139,7 +138,8 @@ public class VersionHandler {
                 while ((reader.read(buffer)) != -1) {
                     // get the char [] appended to the string buffer which is "page"
                     page.append(buffer);
-                }
+                    Arrays.fill(buffer, ' ');
+                 }
                 String resultPage = new String(page);
                 
                 // we are returning the WHOLE page we got from the URL
@@ -161,10 +161,14 @@ public class VersionHandler {
     }
 
     private static String getversion(String response) {
-        //This method gets the version of the application by looking for the tags <version> on the file
-              
+        //This method gets the version of the application. Since there are a lot of tags <version>, I will do a quick hack:
+        //get to the first <version>, which should be the one for the application
+        //TO DO: get the XML into a nice XML DOC and find the version through an XPATH.
         
-        return null;
+        //get the substring from <version> + 9 chars (length(<version>) == 9), to the end of the tag.
+        String version = response.substring( response.indexOf("<version>")+9, response.indexOf("</version>"));
+        
+        return version;
     }
 
     private static Optional<String> getVersionFromMavenFile() {
