@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{0FFDDE85-316B-4B74-BF99-CF97044502B7}
 AppName=LogWrapper
-AppVersion=0.0.4 Beta
+AppVersion=1.0.0 
 ;AppVerName=LogWrapper 1.5
 AppPublisher=Diebold Nixdorf
 AppPublisherURL=
