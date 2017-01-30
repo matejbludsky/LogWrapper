@@ -1,4 +1,4 @@
-package cz.wincor.pnc.main;
+package cz.wincor.version;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.StringTokenizer;
+
+import javax.swing.JOptionPane;
 
 /*
  * This class handles the version checking, the message to the user, and the user response to continue or just stop to download
@@ -81,29 +83,28 @@ public class VersionHandler {
         // a non error response, get the page as a string with an
         // InputStream ()HttpURLConnection.getInputStream()) and put it in a char[] buffer.
         // Pass that to a String and look for the tags are: <version>"version</version>
-        //Issues: -github uses redirects and HTTPURLConnection does not handle those so I'll have to do it manually
-        //         -we have a proxy also. 
-        
-        
-        //TO DO: get the link variable from the properties/conf file
+        // Issues: -github uses redirects and HTTPURLConnection does not handle those so I'll have to do it manually
+        // -we have a proxy also.
+
+        // TO DO: get the link variable from the properties/conf file
         Optional<String> pomVersion = null;
 
-        //this is the actual link to the RAW file, so it comes with XML tags, no need to decofied the HTML
+        // this is the actual link to the RAW file, so it comes with XML tags, no need to decofied the HTML
         String link = "https://raw.githubusercontent.com/matejbludsky/LogWrapper/master/pom.xml";
         URL pomURL;
         HttpURLConnection pomHttp;
         try {
             Properties systemProperties = System.getProperties();
-            //systemProperties.setProperty("http.proxyHost","http://proxyconf.wincor-nixdorf.com/");
-            //systemProperties.setProperty("http.proxyPort","81");
+            // systemProperties.setProperty("http.proxyHost","http://proxyconf.wincor-nixdorf.com/");
+            // systemProperties.setProperty("http.proxyPort","81");
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy-pdb.wincor-nixdorf.com", 81));
             pomURL = new URL(link);
             pomHttp = (HttpURLConnection) pomURL.openConnection(proxy);
             pomHttp.connect();
 
             int responseHeader = pomHttp.getResponseCode();
-            
-            //TO DO: check for redirects and only accept the document if we get a 200.
+
+            // TO DO: check for redirects and only accept the document if we get a 200.
             if (responseHeader == 200) {
                 // We know there should not be that many lines before we hit the version tag,
                 // but I don't want to risk the tag being in several lines or any other ill format issue
@@ -131,7 +132,7 @@ public class VersionHandler {
             char[] buffer = new char[2048];
             // this is the actual whole page
             StringBuffer page = new StringBuffer();
-            
+
             try (InputStream pomStream = pomHttp.getInputStream(); Reader reader = new BufferedReader(new InputStreamReader(pomStream, "UTF-8"));) {
 
                 // read appending to the stringbuffer so that we can have an "arbitrary" long page.
@@ -139,9 +140,9 @@ public class VersionHandler {
                     // get the char [] appended to the string buffer which is "page"
                     page.append(buffer);
                     Arrays.fill(buffer, ' ');
-                 }
+                }
                 String resultPage = new String(page);
-                
+
                 // we are returning the WHOLE page we got from the URL
                 return resultPage;
 
@@ -161,13 +162,14 @@ public class VersionHandler {
     }
 
     private static String getversion(String response) {
-        //This method gets the version of the application. Since there are a lot of tags <version>, I will do a quick hack:
-        //get to the first <version>, which should be the one for the application
-        //TO DO: get the XML into a nice XML DOC and find the version through an XPATH.
-        
-        //get the substring from <version> + 9 chars (length(<version>) == 9), to the end of the tag.
-        String version = response.substring( response.indexOf("<version>")+9, response.indexOf("</version>"));
-        
+        // This method gets the version of the application. Since there are a lot of tags <version>, I will do a quick
+        // hack:
+        // get to the first <version>, which should be the one for the application
+        // TO DO: get the XML into a nice XML DOC and find the version through an XPATH.
+
+        // get the substring from <version> + 9 chars (length(<version>) == 9), to the end of the tag.
+        String version = response.substring(response.indexOf("<version>") + 9, response.indexOf("</version>"));
+
         return version;
     }
 
@@ -194,10 +196,13 @@ public class VersionHandler {
         // the current one.
 
         // display the dialog
-
+        Object[] options = { "Continue with application.", "Close the application." };
+        int n = JOptionPane.showOptionDialog(null, "Do you want to continue with this application?", "There is a new version available", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         /// get dialog value
+        if (n == JOptionPane.NO_OPTION) {
+            return false;
+        } else
+            return true;
 
-        return false;
     }
-
 }
