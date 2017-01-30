@@ -197,7 +197,7 @@ public class VersionHandler {
 
         // display the dialog
         Object[] options = { "Continue with application.", "Close the application." };
-        int n = JOptionPane.showOptionDialog(null, "Do you want to continue with this application?", "There is a new version available", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        int n = JOptionPane.showOptionDialog(null, "\n There is a new version available at https://github.com/matejbludsky/LogWrapper/releases.\n \n Do you want to continue with this application? \n \n", "There is a new version available of this application.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         /// get dialog value
         if (n == JOptionPane.NO_OPTION) {
             return false;
