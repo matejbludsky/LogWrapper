@@ -1,5 +1,6 @@
 package cz.wincor.version;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +12,8 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Optional;
@@ -196,12 +199,28 @@ public class VersionHandler {
         // the current one.
 
         // display the dialog
-        Object[] options = { "Continue with application.", "Close the application." };
-        int n = JOptionPane.showOptionDialog(null, "\n There is a new version available at https://github.com/matejbludsky/LogWrapper/releases.\n \n Do you want to continue with this application? \n \n", "There is a new version available of this application.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        String releaseLocation = new String ("https://github.com/matejbludsky/LogWrapper/releases");
+        Object[] options = { "Continue with application.", "Close the application." , "Get the newer release"};
+        int n = JOptionPane.showOptionDialog(null, "\n There is a new version available at " + releaseLocation + "\n \n Do you want to continue with this application? \n \n", "There is a new version available of this application.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         /// get dialog value
         if (n == JOptionPane.NO_OPTION) {
             return false;
-        } else
+        } else if (n== 2) {
+            //user wants to get the new release, open a browser with the URL.
+            //create the URL from the string.
+            //open the browser with the URL
+            try {
+                Desktop.getDesktop().browse(new URI(releaseLocation));
+            } catch (IOException | URISyntaxException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return false;
+            } 
+            return false;
+        }
+        
+        
+        
             return true;
 
     }
