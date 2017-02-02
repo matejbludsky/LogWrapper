@@ -33,12 +33,15 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\projects\LogWrapper\target\LogWrapper.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\projects\LogWrapper\LogWrapper.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\projects\LogWrapper\conf\*"; DestDir: "{app}\conf"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\LogWrapper"; Filename: "{app}\{#MyAppExeName}"
 Name: "{commondesktop}\LogWrapper"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
 
 [Run]
 Filename: "{app}\LogWrapper.exe"; Description: "{cm:LaunchProgram,LogWrapper}"; Flags: nowait postinstall skipifsilent
@@ -48,5 +51,6 @@ Filename: "{app}\LogWrapper.exe"; Description: "{cm:LaunchProgram,LogWrapper}"; 
 Root: HKCR; Subkey: ".ctr";                             ValueData: "{#MyAppName}";          Flags: uninsdeletevalue; ValueType: string;  ValueName: ""
 Root: HKCR; Subkey: "{#MyAppName}";                     ValueData: "Program {#MyAppName}";  Flags: uninsdeletekey;   ValueType: string;  ValueName: ""
 Root: HKCR; Subkey: "{#MyAppName}\DefaultIcon";             ValueData: "{app}\{#MyAppExeName},0";               ValueType: string;  ValueName: ""
-Root: HKCR; Subkey: "{#MyAppName}\shell\open\command";  ValueData: """{app}\{#MyAppExeName}"" ""%1""";  ValueType: string;  ValueName: ""
+Root: HKCR; Subkey: "{#MyAppName}\shell\open\command";  ValueData: """{app}\LogWrapper.bat"" ""%1""";  ValueType: string;  ValueName: ""
+
 
