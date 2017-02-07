@@ -130,7 +130,7 @@ public class VersionHandler {
         } catch (IOException e) {
             // Since we could not connect, then just print the stack and behave as the version is up to date
             e.printStackTrace();
-            return null;
+            return Optional.empty();
 
         }
 
