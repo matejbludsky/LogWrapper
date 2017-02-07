@@ -37,7 +37,7 @@ public class VersionHandler {
             // app is up to date
             return true;
         } else if (continueWithAppNoUpdated()) {
-            // the applicaiton is not updated, but the user wants to continue anyway
+            // the application is not updated, but the user wants to continue anyway
             return true;
         }
         // any other case, we stop
@@ -61,7 +61,8 @@ public class VersionHandler {
     }
 
     private static boolean pomVersionNewer(Optional<String> mavenVersion, Optional<String> pomVersion) {
-        // compares the maven with the pom version.
+        //  Compares the maven with the pom version, if one of the versions is empty, we don't compare, but just run
+        //  the application.
         // For now, we just compare a version with three different numbers, separated with dots, and with the most
         // significant version
         // at the left -> numerical value
@@ -70,14 +71,22 @@ public class VersionHandler {
         String mavenVer = mavenVersion.orElse("");
         String pomVer = pomVersion.orElse("");
 
-        // convert to integers and compare numerically
-        mavenVer = mavenVer.replaceAll("\\.", "");
-        pomVer = pomVer.replaceAll("\\.", "");
-        int mavenVerInt = Integer.parseInt(mavenVer);
-        int pomVerInt = Integer.parseInt(pomVer);
+        if (mavenVer.length() != 0 && pomVer.length() != 0)
+        {
+            // convert to integers and compare numerically
+            mavenVer = mavenVer.replaceAll("\\.", "");
+            pomVer = pomVer.replaceAll("\\.", "");
+            int mavenVerInt = Integer.parseInt(mavenVer);
+            int pomVerInt = Integer.parseInt(pomVer);
 
-        // we return true ONLY if the POM has a newer version, a greater numerically value
-        return (pomVerInt > mavenVerInt);
+            // we return true ONLY if the POM has a newer version, a greater numerically value
+            return (pomVerInt > mavenVerInt);
+            
+        }    
+        else 
+            //we didn't have one of the versions so, behave as if the version is current.
+            return false;
+        
     }
 
     private static Optional<String> getVersionFromPomFile() {
@@ -119,7 +128,7 @@ public class VersionHandler {
             return pomVersion;
 
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // Since we could not connect, then just print the stack and behave as the version is up to date
             e.printStackTrace();
             return null;
 
