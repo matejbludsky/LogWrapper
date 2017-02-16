@@ -12,10 +12,13 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -61,8 +64,8 @@ public class VersionHandler {
     }
 
     private static boolean pomVersionNewer(Optional<String> mavenVersion, Optional<String> pomVersion) {
-        //  Compares the maven with the pom version, if one of the versions is empty, we don't compare, but just run
-        //  the application.
+        // Compares the maven with the pom version, if one of the versions is empty, we don't compare, but just run
+        // the application.
         // For now, we just compare a version with three different numbers, separated with dots, and with the most
         // significant version
         // at the left -> numerical value
@@ -71,8 +74,7 @@ public class VersionHandler {
         String mavenVer = mavenVersion.orElse("");
         String pomVer = pomVersion.orElse("");
 
-        if (mavenVer.length() != 0 && pomVer.length() != 0)
-        {
+        if (mavenVer.length() != 0 && pomVer.length() != 0) {
             // convert to integers and compare numerically
             mavenVer = mavenVer.replaceAll("\\.", "");
             pomVer = pomVer.replaceAll("\\.", "");
@@ -81,12 +83,11 @@ public class VersionHandler {
 
             // we return true ONLY if the POM has a newer version, a greater numerically value
             return (pomVerInt > mavenVerInt);
-            
-        }    
-        else 
-            //we didn't have one of the versions so, behave as if the version is current.
+
+        } else
+            // we didn't have one of the versions so, behave as if the version is current.
             return false;
-        
+
     }
 
     private static Optional<String> getVersionFromPomFile() {
@@ -106,12 +107,15 @@ public class VersionHandler {
         URL pomURL;
         HttpURLConnection pomHttp;
         try {
-            Properties systemProperties = System.getProperties();
-            // systemProperties.setProperty("http.proxyHost","http://proxyconf.wincor-nixdorf.com/");
-            // systemProperties.setProperty("http.proxyPort","81");
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy-pdb.wincor-nixdorf.com", 81));
+            // Sometimes we don't have a proxy.
             pomURL = new URL(link);
-            pomHttp = (HttpURLConnection) pomURL.openConnection(proxy);
+            if (weAreUsingProxy()) {
+                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy-pdb.wincor-nixdorf.com", 81));
+                pomHttp = (HttpURLConnection) pomURL.openConnection(proxy);
+            } else {
+                // no proxy version
+                pomHttp = (HttpURLConnection) pomURL.openConnection();
+            }
             pomHttp.connect();
 
             int responseHeader = pomHttp.getResponseCode();
@@ -134,6 +138,35 @@ public class VersionHandler {
 
         }
 
+    }
+
+    private static boolean weAreUsingProxy() {
+        // this method checks if we are using a proxy or not.
+        try {
+            System.setProperty("java.net.useSystemProxies", "true");
+            List<Proxy> l = ProxySelector.getDefault().select(new URI("http://www.yahoo.com/"));
+
+            for (Iterator<Proxy> iter = l.iterator(); iter.hasNext();) {
+
+                Proxy proxy = iter.next();
+
+                System.out.println("proxy hostname : " + proxy.type());
+
+                InetSocketAddress addr = (InetSocketAddress) proxy.address();
+
+                if (addr == null) {
+
+                    return false;
+
+                } else {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     private static String getStringFromStream(HttpURLConnection pomHttp) throws IOException {
@@ -208,29 +241,27 @@ public class VersionHandler {
         // the current one.
 
         // display the dialog
-        String releaseLocation = new String ("https://github.com/matejbludsky/LogWrapper/releases");
-        Object[] options = { "Continue with application.", "Close the application." , "Get the newer release"};
+        String releaseLocation = new String("https://github.com/matejbludsky/LogWrapper/releases");
+        Object[] options = { "Continue with application.", "Close the application.", "Get the newer release" };
         int n = JOptionPane.showOptionDialog(null, "\n There is a new version available at " + releaseLocation + "\n \n Do you want to continue with this application? \n \n", "There is a new version available of this application.", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         /// get dialog value
         if (n == JOptionPane.NO_OPTION) {
             return false;
-        } else if (n== 2) {
-            //user wants to get the new release, open a browser with the URL.
-            //create the URL from the string.
-            //open the browser with the URL
+        } else if (n == 2) {
+            // user wants to get the new release, open a browser with the URL.
+            // create the URL from the string.
+            // open the browser with the URL
             try {
                 Desktop.getDesktop().browse(new URI(releaseLocation));
             } catch (IOException | URISyntaxException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 return false;
-            } 
+            }
             return false;
         }
-        
-        
-        
-            return true;
+
+        return true;
 
     }
 }
