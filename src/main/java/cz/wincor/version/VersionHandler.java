@@ -109,19 +109,17 @@ public class VersionHandler {
         // this is the actual link to the RAW file, so it comes with XML tags, no need to decofied the HTML
         String link = "https://raw.githubusercontent.com/matejbludsky/LogWrapper/master/pom.xml";
         URL pomURL;
-        HttpURLConnection pomHttp;
+        HttpURLConnection pomHttp = null;
         try {
-            // Sometimes we don't have a proxy.
+            // Sometimes we don't have a proxy. So we will connect directly and try again. if we get two refused connections, just continue and give back 
+            //an empty version.
             pomURL = new URL(link);
-            if (weAreUsingProxy()) {
-                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy-pdb.wincor-nixdorf.com", 81));
-                pomHttp = (HttpURLConnection) pomURL.openConnection(proxy);
-            } else {
+            if ((pomHttp = weCanConnectUsingProxy(pomURL)) == null) {
                 // no proxy version
                 pomHttp = (HttpURLConnection) pomURL.openConnection();
+                pomHttp.connect();
             }
-            pomHttp.connect();
-
+ 
             int responseHeader = pomHttp.getResponseCode();
 
             // TO DO: check for redirects and only accept the document if we get a 200.
@@ -142,6 +140,21 @@ public class VersionHandler {
 
         }
 
+    }
+
+    private static HttpURLConnection weCanConnectUsingProxy(URL pomURL)  {
+        
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy-pdb.wincor-nixdorf.com", 81));
+        HttpURLConnection pomHttp;
+        try {
+            pomHttp = (HttpURLConnection) pomURL.openConnection(proxy);
+            pomHttp.connect();
+            return pomHttp;
+        } catch (IOException e) {
+            // Basically we just return a null if we could not connect or get the proxy name.
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static boolean weAreUsingProxy() {
