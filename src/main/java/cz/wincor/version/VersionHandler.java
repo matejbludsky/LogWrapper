@@ -157,44 +157,6 @@ public class VersionHandler {
         }
     }
 
-    private static boolean weAreUsingProxy() {
-        // this method checks if we are using a proxy or not.
-        
-        /*try {
-            System.setProperty("java.net.useSystemProxies", "true");
-            
-            // Use proxy vole to find the default proxy
-            ProxySearch ps = ProxySearch.getDefaultProxySearch();
-            ps.setPacCacheSettings(32, 1000*60*5);                             
-            List<Proxy> l = ps.getProxySelector().select(
-                    new URI("http://www.yahoo.com/"));
-
-            for (Iterator<Proxy> iter = l.iterator(); iter.hasNext();) {
-
-                Proxy proxy = iter.next();
-
-                System.out.println("proxy hostname : " + proxy.type());
-
-                InetSocketAddress addr = (InetSocketAddress) proxy.address();
-
-                if (addr == null) {
-
-                    return false;
-
-                } else {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
-        //this code does not work on the normal Wincor laptops, so I have several options:
-       //-comment it out
-        //-use proxy volve lib, but that means adding the jar file as part of the project so that this project can get built.
-        
-        return true;
-    }
 
     private static String getStringFromStream(HttpURLConnection pomHttp) throws IOException {
         // this method gets the whole page that we got from the URL into a String.
