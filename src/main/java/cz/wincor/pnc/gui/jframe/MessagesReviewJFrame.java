@@ -74,6 +74,7 @@ import cz.wincor.pnc.gui.component.ImageJLabel;
 import cz.wincor.pnc.gui.component.LogWrapperTableModel;
 import cz.wincor.pnc.types.MessageTypeManager;
 import cz.wincor.pnc.types.MessageTypeManager.Message;
+import cz.wincor.pnc.types.SessionsModelAdapter;
 import cz.wincor.pnc.util.ImageUtil;
 import cz.wincor.pnc.util.SystemUtil;
 import cz.wincor.pnc.util.TraceStringUtils;
@@ -133,7 +134,10 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             JScrollPane tableScrollablePane = new JScrollPane(resultTable);
             tableScrollablePane.getVerticalScrollBar().setUnitIncrement(40);
 
-            loadContentFromCache();
+            //loadContentFromCache();
+            loadContentFromSessionList();
+            
+            
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
             split.setDividerLocation(400);
             split.setResizeWeight(0.5);
@@ -629,6 +633,38 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
     }
 
+    /**
+     * Loads the messages on the JTable
+     * 
+     * @param cache
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private void loadContentFromSessionList() throws ClassNotFoundException, IOException {
+
+        DragAndDropPanel.getInstance().logToTextArea("Loading data into preview", true);
+
+        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
+        try {
+            //use recursion to create it from the session list
+            //we use a SessionsModelAdapter to handle the specifics of the JTable without interfiering with the actual data structure.
+            //It will deal also with showing the message at the DragAndDropPanel when we hit the increment of 50.
+            model = SessionsModelAdapter.getTableModel(resultTable);
+            
+        } catch (Exception e) {
+            
+            JOptionPane.showMessageDialog(this, "Cannot import messages " + e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+
+        } finally {
+
+
+        }
+
+    }
+    
+    
+    
+    
     public JTable getResultTable() {
         return resultTable;
     }
