@@ -20,17 +20,6 @@ import cz.wincor.pnc.gui.component.LogWrapperTableModel;
 
 public class SessionsModelAdapter {
 
-    private static List<Session> sessions;
-
-    private static List<Transaction> transactions;
-
-    private static List<TransactionMessage> messages;
-
-    public SessionsModelAdapter(List<Session> sessionsToProcess) {
-        sessions = sessionsToProcess;
-        transactions = sessions.get(0).getTransactions();
-
-    }
 
     public static LogWrapperTableModel getTableModel(JTable resultTable) {
         // this method creates the table model for the table showing the messages and shows a message on the
@@ -45,15 +34,13 @@ public class SessionsModelAdapter {
                 //lot of time trying to hold position across method calls  with 4 pointers. This is easier.
                 model = (LogWrapperTableModel) resultTable.getModel();
                 int increment = 0;
-                for (Session session : sessions) {
+                for (Session session : Sessions.getSessions()) {
                     // new session to process
                     // set transaction list to the start of the sessions
-                    transactions = session.getTransactions();
-                    for (Transaction transaction : transactions) {
+                    for (Transaction transaction : session.getTransactions()) {
                         // new transaction to process
                         // set the messages list to the start of the messages list on this transaction
-                        messages = transaction.getTransactionMessages();
-                        for (TransactionMessage transactionMesage : messages) {
+                        for (TransactionMessage transactionMesage : transaction.getTransactionMessages()) {
                             // I have ONE message, so process it.
                             String key = new String(transactionMesage.getKey());
                             LogWrapperCacheItem item = transactionMesage.getCacheItem();
