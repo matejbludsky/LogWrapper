@@ -30,6 +30,7 @@ import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +76,7 @@ import cz.wincor.pnc.gui.component.LogWrapperTableModel;
 import cz.wincor.pnc.types.MessageTypeManager;
 import cz.wincor.pnc.types.MessageTypeManager.Message;
 import cz.wincor.pnc.types.SessionsModelAdapter;
+import cz.wincor.pnc.types.TransactionMessage;
 import cz.wincor.pnc.util.ImageUtil;
 import cz.wincor.pnc.util.SystemUtil;
 import cz.wincor.pnc.util.TraceStringUtils;
@@ -569,10 +571,20 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         resultTable.getColumnModel().getColumn(7).setMaxWidth(0);
 
         TableRowSorter<LogWrapperTableModel> sorter = new TableRowSorter<LogWrapperTableModel>(model);
-        List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
-        sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
+        //add a comparator to the TableRowSorter to sort by dates. Right now it sorts in ascending, but there is no date related sort.
+        //We assume that column 2 is date.
+        sorter.setComparator(2,  new Comparator<LogWrapperCacheItem> () {
+            public int compare(LogWrapperCacheItem cacheItem1, LogWrapperCacheItem cacheItem2) {
+                //compare two items
+                //return cacheItem1.getServerDate().compareTo(cacheItem2.getServerDate());
+                //just testing
+                return 0;
+            }
+        });
+        //List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
+        //sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
 
-        sorter.setSortKeys(sortKeys);
+        //sorter.setSortKeys(sortKeys);
         resultTable.setRowSorter(sorter);
         resultTable.setDefaultRenderer(Date.class, new TableRenderer());
         resultTable.setDefaultRenderer(String.class, new TableRenderer());
