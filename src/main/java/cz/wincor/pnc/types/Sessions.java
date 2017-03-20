@@ -82,8 +82,6 @@ public class Sessions {
             }
         });
         
-        
-        
         //now we have the sorted list, so fill up the JTable model.
         Session session = new Session();
         Transaction transaction = new Transaction();
@@ -106,7 +104,7 @@ public class Sessions {
                 transaction.addTransactionMessage(transactionMessage);             
             }
             
-            else if (item.getMessage().contains("Logout")) {
+/*            else if (item.getMessage().contains("LogoutRequest")) {
                 //attach message to current session, which means attach it to the current transaction
                 transaction.addTransactionMessage(transactionMessage);             
                 
@@ -116,9 +114,9 @@ public class Sessions {
                 transaction = new Transaction();
                 session.addTransaction(transaction);
                 sessions.add(session); 
-            }
+            }*/
           
-            else if (item.getMessage().contains("Login")) {
+            else if (item.getMessage().contains("LoginRequest")) {
                 //again, for simplicity sake, I check if I have a session with a transaction with an empty list of messages, and then start adding them there.
                 //if not, I just create a new session, transasction, and message and add it to sessions, just in case
                 //correct way to solve all of this is to use state machines to keep track of the grammar
@@ -144,7 +142,8 @@ public class Sessions {
         //this method seeks a Login or Logout message to mean that the session has finished. A Login means, that we didn't get a Logout message prior to it.
         //LOG.info("::Message::" + item.getMessage());
         System.out.println("MESSAGE" + item.getMessage());
-        if ( item.getMessage().contains("Login") || item.getMessage().contains("Logout")) {
+        //if ( item.getMessage().contains("Login") || item.getMessage().contains("Logout")) {
+        if ( item.getMessage().contains("LoginRequest")) {
             return true;
             
         }
