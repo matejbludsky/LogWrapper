@@ -48,6 +48,9 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
     public static String UUID_REQUEST = "$UUID$";
     public static String ENDPOINT = "$ENDPOINT$";
     public static String TEST_STEP_NAME = "$TEST_STEP_NAME$";
+    public static String TRACK2 = "$TRACK2$";
+    
+    public static String CARD_TRACK2_TAG ="<PreDefName>CARD_TRACK_2</PreDefName>";
     private List<LogWrapperCacheItem> cache = new ArrayList<LogWrapperCacheItem>();
 
     private String finalFilePath = LogWrapperSettings.normalizeDir(LogWrapperSettings.SOAPUI_FINAL_LOCATION);
@@ -101,6 +104,7 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
         String template = loadProjectTemplate();
         template = replaceProjectName(template, templateName);
         template = replaceTestSuiteName(template, templateName);
+        template = replaceTrack2(template);
         template = replaceWSDLPaths(template, finalFilePath + "/WSDL/V02");
         template = replaceUUID(template);
         setProgress(25);
@@ -148,6 +152,7 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
                 template = replaceRequestName(template, cacheItem.getMessageType());
                 template = replaceUUID(template);
                 template = replaceEndpoint(template, binding);
+                request = replaceCardTrackData2(request);
                 template = insertRequest(template, request);
 
                 suites.append(template);
@@ -204,6 +209,15 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
     private String replaceTestSuiteName(String template, String message) {
         return template = template.replace(TEST_SUITE_NAME, message);
     }
+    
+    private String replaceTrack2(String template){
+        if (LogWrapperSettings.CARD_DATA) {
+            template = template.replace(TRACK2, LogWrapperSettings.CARD_DATA_VALUE);
+        }
+               
+        return template;
+        
+    }
 
     private String replaceRequestName(String template, String messageType) {
         return template = template.replace(REQUEST_NAME, messageType);
@@ -217,6 +231,16 @@ public class SOAPUIExporter extends SwingWorker<Boolean, String> {
         return template = template.replace(SOAP_REQUEST, SystemUtil.formatXML(request));
     }
 
+    private String replaceCardTrackData2(String request) {
+        StringBuilder outputTemplate = new StringBuilder();
+        outputTemplate.append(request.substring(0, request.indexOf(CARD_TRACK2_TAG)));
+        String output = request.substring(request.indexOf(CARD_TRACK2_TAG));
+        output = output.replaceFirst("<Value>(.*?)</Value>", "<Value>\\${\\#Project\\#track2data}</Value>");
+        outputTemplate.append(output);
+        request = SystemUtil.formatXML(outputTemplate.toString());
+        return request; 
+    }
+    
     private String replaceEndpoint(String template, BindingType binding) {
         String host = LogWrapperSettings.ENDPOINT_URL;
 
