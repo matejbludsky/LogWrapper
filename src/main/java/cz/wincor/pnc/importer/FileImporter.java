@@ -1,5 +1,8 @@
 package cz.wincor.pnc.importer;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -9,7 +12,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingWorker;
 
 import org.apache.log4j.Logger;
@@ -174,5 +179,4 @@ public class FileImporter implements IFileImporter {
             return true;
         }
     }
-
 }

@@ -46,7 +46,7 @@ public class Sessions {
 
     public static boolean createSessions()  throws ClassNotFoundException, IOException {
         //this method creates the data structures from the DB
-        //The messsages in the DB are not in sequence. So, I'll load the DB in a list, sort the list based on SErvertime, then use the list to crete the sessions data structure
+        //The messages in the DB are not in sequence. So, I'll load the DB in a list, sort the list based on SErvertime, then use the list to create the sessions data structure
         //and put them in the JTable model.
         DB db = null;
         DBIterator dbIterator = null;

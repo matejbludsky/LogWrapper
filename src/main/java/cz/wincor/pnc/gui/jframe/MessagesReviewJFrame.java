@@ -13,9 +13,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -48,10 +51,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
@@ -90,7 +95,7 @@ import net.coderazzi.filters.gui.TableFilterHeader;
  * 
  */
 
-public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRenderer, WindowListener {
+public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRenderer, WindowListener, ActionListener {
     /**
      * 
      */
@@ -136,10 +141,9 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             JScrollPane tableScrollablePane = new JScrollPane(resultTable);
             tableScrollablePane.getVerticalScrollBar().setUnitIncrement(40);
 
-            //loadContentFromCache();
+            // loadContentFromCache();
             loadContentFromSessionList();
-            
-            
+
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
             split.setDividerLocation(400);
             split.setResizeWeight(0.5);
@@ -390,8 +394,10 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
      * @param saveImage
      */
     private void reloadPreviewContent(int row, boolean saveImage) {
+        // a right click does not select anything in the table, but it still gets us here so we cannot use:
+        // resultTable.getSelectedRow()
         if (row >= 0) {
-            String keyID = resultTable.getValueAt(resultTable.getSelectedRow(), 7).toString();
+            String keyID = resultTable.getValueAt(row, 7).toString();
             prettyPrintMessageTextArea(keyID);
             if (saveImage) {
                 activeImages = ImageUtil.saveImages(keyID);
@@ -400,7 +406,6 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     loadImagesToPreviewArea();
                 }
             }
-
             LOG.debug("Row selected : " + keyID);
         }
     }
@@ -551,13 +556,54 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         });
         resultTable.setFillsViewportHeight(true);
 
-        resultTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int row = resultTable.rowAtPoint(evt.getPoint());
-                reloadPreviewContent(row, true);
+        // create the popup menu and add the listener
+        JMenuItem menuItem;
+
+        // Create the popup menu.
+        JPopupMenu popup = new JPopupMenu();
+        menuItem = new JMenuItem("Show the session of this message");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent paramActionEvent) {
+                // We handle the pop up session listener
+                // get the menu item clicked.
+                //JMenuItem source = (JMenuItem) (paramActionEvent.getSource());
+                //get the session for this message from the table
+                int rowSelected = resultTable.getSelectedRow();
+                //int rowAtPoint = resultTable.rowAtPoint(SwingUtilities.convertPoint(popup, new Point(0, 0), resultTable));
+                String keyID = resultTable.getValueAt(rowSelected, 7).toString();
+                LOG.debug("Row selected : " + keyID);
+                //open a dialog to show the session in a tree.GUI.
+                TreeJFrame treeFrame = new TreeJFrame();
+                treeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                treeFrame.pack();
+                treeFrame.setVisible(true);
+                
             }
         });
+        popup.add(menuItem);
+        menuItem = new JMenuItem("Show the transaction of this message");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent paramActionEvent) {
+                // We handle the pop up session listener
+                // get the menu item clicked.
+                //JMenuItem source = (JMenuItem) (paramActionEvent.getSource());
+                //get the session for this message from the table
+                int rowSelected = resultTable.getSelectedRow();
+                //int rowAtPoint = resultTable.rowAtPoint(SwingUtilities.convertPoint(popup, new Point(0, 0), resultTable));
+                //get the item cache key
+                String keyID = resultTable.getValueAt(rowSelected, 7).toString();
+                LOG.debug("Row selected : " + keyID);
+                //open a dialog to show the session in a tree.GUI.
+                TreeJFrame treeFrame = new TreeJFrame();
+                treeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                treeFrame.pack();
+                treeFrame.setVisible(true);
+            }
+        });
+        popup.add(menuItem);
+
+        MouseListener popupListener = new PopupListener(popup);
+        resultTable.addMouseListener(popupListener);
 
         resultTable.getColumnModel().getColumn(0).setPreferredWidth(15);
         resultTable.getColumnModel().getColumn(1).setPreferredWidth(20);
@@ -571,20 +617,21 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         resultTable.getColumnModel().getColumn(7).setMaxWidth(0);
 
         TableRowSorter<LogWrapperTableModel> sorter = new TableRowSorter<LogWrapperTableModel>(model);
-        //add a comparator to the TableRowSorter to sort by dates. Right now it sorts in ascending, but there is no date related sort.
-        //We assume that column 2 is date.
-        sorter.setComparator(2,  new Comparator<LogWrapperCacheItem> () {
+        // add a comparator to the TableRowSorter to sort by dates. Right now it sorts in ascending, but there is no
+        // date related sort.
+        // We assume that column 2 is date.
+        sorter.setComparator(2, new Comparator<LogWrapperCacheItem>() {
             public int compare(LogWrapperCacheItem cacheItem1, LogWrapperCacheItem cacheItem2) {
-                //compare two items
-                //return cacheItem1.getServerDate().compareTo(cacheItem2.getServerDate());
-                //just testing
+                // compare two items
+                // return cacheItem1.getServerDate().compareTo(cacheItem2.getServerDate());
+                // just testing
                 return 0;
             }
         });
-        //List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
-        //sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
+        // List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
+        // sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
 
-        //sorter.setSortKeys(sortKeys);
+        // sorter.setSortKeys(sortKeys);
         resultTable.setRowSorter(sorter);
         resultTable.setDefaultRenderer(Date.class, new TableRenderer());
         resultTable.setDefaultRenderer(String.class, new TableRenderer());
@@ -658,25 +705,22 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
 
         LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
         try {
-            //use recursion to create it from the session list
-            //we use a SessionsModelAdapter to handle the specifics of the JTable without interfiering with the actual data structure.
-            //It will deal also with showing the message at the DragAndDropPanel when we hit the increment of 50.
+            // use recursion to create it from the session list
+            // we use a SessionsModelAdapter to handle the specifics of the JTable without interfiering with the actual
+            // data structure.
+            // It will deal also with showing the message at the DragAndDropPanel when we hit the increment of 50.
             model = SessionsModelAdapter.getTableModel(resultTable);
-            
+
         } catch (Exception e) {
-            
+
             JOptionPane.showMessageDialog(this, "Cannot import messages " + e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
 
         } finally {
 
-
         }
 
     }
-    
-    
-    
-    
+
     public JTable getResultTable() {
         return resultTable;
     }
@@ -847,6 +891,58 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     public void display() {
         repaint();
         setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent paramActionEvent) {
+        // We handle the pop up menu events here.
+        // get the menu item clicked.
+        JMenuItem source = (JMenuItem) (paramActionEvent.getSource());
+        String s = source.getName();
+        LOG.info("Source: " + s);
+
+    }
+
+    class PopupListener extends MouseAdapter {
+        JPopupMenu popup;
+
+        PopupListener(JPopupMenu popupMenu) {
+            popup = popupMenu;
+        }
+
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent evt) {
+            int row = resultTable.rowAtPoint(evt.getPoint()); 
+            reloadPreviewContent(row, true);
+        }
+        
+        @Override
+        public void mousePressed(MouseEvent evt) {
+            int row = resultTable.rowAtPoint(evt.getPoint());
+            // Get the ListSelectionModel of the JTable
+            ListSelectionModel model = resultTable.getSelectionModel();
+            // set the selected interval of rows. Using the "row"
+            // variable for the beginning and end selects only that one row.
+            model.setSelectionInterval( row, row );     
+            maybeShowPopup(evt);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent evt) {
+            int row = resultTable.rowAtPoint(evt.getPoint());
+            // Get the ListSelectionModel of the JTable
+            ListSelectionModel model = resultTable.getSelectionModel();
+            // set the selected interval of rows. Using the "row"
+            // variable for the beginning and end selects only that one row.
+            model.setSelectionInterval( row, row );     
+            maybeShowPopup(evt);
+        }
+
+        private void maybeShowPopup(MouseEvent evt) {
+            if (evt.isPopupTrigger()) {
+                popup.show(evt.getComponent(), evt.getX(), evt.getY());
+            }
+        }
     }
 
 }
