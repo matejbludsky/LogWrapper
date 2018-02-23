@@ -102,6 +102,14 @@ public class MessageTypeManager {
         settings.add(new Message("Process", Color.LIGHT_GRAY, Color.BLACK));
         settings.add(new Message("Authorize", Color.CYAN, Color.BLACK));
         settings.add(new Message("Finalize", Color.RED, Color.BLACK));
+        //for RSS
+        settings.add(new Message("RSSCardAcctPartyRelInqRequest", Color.YELLOW, Color.BLACK));
+       // settings.add(new Message("RSSCardAcctPartyRelInqResponse", Color.YELLOW, Color.BLACK));
+        
+        settings.add(new Message("RSSCreditAdviseRequest", Color.ORANGE, Color.BLACK));
+       // settings.add(new Message("RSSCreditAdviseResponse", Color.MAGENTA, Color.BLACK));
+        
+        
     }
 
     /**

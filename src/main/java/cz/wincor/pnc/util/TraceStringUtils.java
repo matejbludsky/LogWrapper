@@ -200,6 +200,31 @@ public class TraceStringUtils {
         }
         return messageType;
     }
+    
+    
+    public static String extractMessageTypeRSS(String key, String message) {
+        if (isNull(message)) {
+            return null;
+        }
+
+        String messageType = "-";
+        try {
+            int startTag = message.indexOf(":Body>");
+            int endTag = message.indexOf("http://pnc.enterprise.integration/rss/2.3/schemas");
+
+            messageType = message.substring(startTag + 11, endTag);
+            messageType= messageType.substring(0, messageType.indexOf(' '));
+            if(!messageType.contains("Response")){
+                messageType = messageType +   "Request"; 
+            }
+           // Request
+            LOG.debug("Row id : " + key + " Extracted Message Type " + messageType);
+
+        } catch (Exception e) {
+            LOG.error("Cannot extract Message Type");
+        }
+        return messageType;
+    }
 
     /**
      * Extracts ATM ID from the XML tag

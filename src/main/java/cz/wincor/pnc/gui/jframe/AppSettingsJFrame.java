@@ -16,6 +16,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -59,7 +60,8 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
     @Override
     public void renderUI(Object... parameters) throws UIRenderException {
         setTitle("Application settings");
-        setPreferredSize(new Dimension(350, 480));
+        //setPreferredSize(new Dimension(350, 480));
+        setPreferredSize(new Dimension(350, 520));
         setDefaultLookAndFeelDecorated(true);
         setResizable(false);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -221,6 +223,47 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
 
             }
         });
+        
+            
+        JRadioButton cardData = new JRadioButton("Card Data");
+        cardData.setPreferredSize(new Dimension(300, 20));
+        cardData.setSelected(LogWrapperSettings.CARD_DATA);
+       
+                
+        JTextField cardDataValue = new JTextField(LogWrapperSettings.CARD_DATA_VALUE);
+        cardDataValue.setEnabled(LogWrapperSettings.CARD_DATA);
+        cardDataValue.setPreferredSize(new Dimension(300, 20));
+        cardDataValue.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                JTextField source = (JTextField) e.getSource();
+                LogWrapperSettings.CARD_DATA_VALUE = source.getText();
+
+            }
+        });
+        
+        cardData.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JRadioButton source = (JRadioButton) e.getSource();
+                LogWrapperSettings.CARD_DATA = source.isSelected();
+                cardDataValue.setEnabled(source.isSelected());
+            }
+        });
+
 
         JRadioButton soapuiOverwrite = new JRadioButton("Delete soap ui directory before transformation");
         soapuiOverwrite.setPreferredSize(new Dimension(300, 20));
@@ -269,6 +312,9 @@ public class AppSettingsJFrame extends JFrame implements ILogWrapperUIRenderer {
         mainPanel.add(imagesClear, layout);
         mainPanel.add(soapuiProjectLocationLabel, layout);
         mainPanel.add(soapuiProjectLocation, layout);
+        mainPanel.add(cardData, layout);
+        mainPanel.add(cardDataValue, layout);
+        
         mainPanel.add(soapuiOverwrite, layout);
         mainPanel.add(soapuiClear, layout);
         mainPanel.add(Box.createRigidArea(new Dimension(250, 20)));

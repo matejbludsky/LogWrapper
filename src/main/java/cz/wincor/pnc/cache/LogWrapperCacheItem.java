@@ -3,6 +3,8 @@ package cz.wincor.pnc.cache;
 import java.io.Serializable;
 import java.util.Date;
 
+import cz.wincor.pnc.types.HostTrxMessageEnum;
+
 /**
  * Item representation of the TMP loaded file
  * 
@@ -11,6 +13,10 @@ import java.util.Date;
  */
 public class LogWrapperCacheItem implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1239084122340923L;
     private String message;
     private Date serverDate;
     private String SEQNumber;
@@ -18,8 +24,9 @@ public class LogWrapperCacheItem implements Serializable {
     private String ATMId;
     private String messageType;
     private boolean infoTransaction = false;
+    private HostTrxMessageEnum hostTrxMessageType;
 
-    public LogWrapperCacheItem(String message, Date serverDate, String sEQNumber, Date clientDate, String aTMId, String messageType, boolean infoTransaction) {
+    public LogWrapperCacheItem(String message, Date serverDate, String sEQNumber, Date clientDate, String aTMId, HostTrxMessageEnum hostTrxMessageType ,String messageType, boolean infoTransaction) {
         super();
         this.message = message;
         this.serverDate = serverDate;
@@ -28,6 +35,8 @@ public class LogWrapperCacheItem implements Serializable {
         ATMId = aTMId;
         this.messageType = messageType;
         this.infoTransaction = infoTransaction;
+        this.hostTrxMessageType = hostTrxMessageType;
+       
     }
 
     public LogWrapperCacheItem() {
@@ -87,6 +96,14 @@ public class LogWrapperCacheItem implements Serializable {
 
     public void setInfoTransaction(boolean infoTransaction) {
         this.infoTransaction = infoTransaction;
+    }
+
+    public HostTrxMessageEnum getHostTrxMessageType() {
+        return hostTrxMessageType;
+    }
+
+    public void setHostTrxMessageType(HostTrxMessageEnum hostTrxMessageType) {
+        this.hostTrxMessageType = hostTrxMessageType;
     }
 
 }

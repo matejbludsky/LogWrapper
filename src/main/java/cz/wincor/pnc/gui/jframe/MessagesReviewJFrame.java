@@ -102,7 +102,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = Logger.getLogger(MessagesReviewJFrame.class);
 
-    private String[] columnNames = { "Included", "SEQNumber", "ServerTimeID", "ATMTime", "ATMID", "MessageName", "InfoTransaction", "ID" };
+    private String[] columnNames = { "Included", "SEQNumber", "ServerTimeID", "ATMTime", "ATMID", "MessageType", "MessageName", "InfoTransaction", "ID" };
 
     private double zoom = 1.0; // zoom factor
     private JTable resultTable;
@@ -141,8 +141,12 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             JScrollPane tableScrollablePane = new JScrollPane(resultTable);
             tableScrollablePane.getVerticalScrollBar().setUnitIncrement(40);
 
-            // loadContentFromCache();
+
             loadContentFromSessionList();
+
+            //This is  the call from before, I'm using the call loadContentFromSessionList()
+            //loadContentFromCache();
+
 
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
             split.setDividerLocation(400);
@@ -397,7 +401,11 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         // a right click does not select anything in the table, but it still gets us here so we cannot use:
         // resultTable.getSelectedRow()
         if (row >= 0) {
-            String keyID = resultTable.getValueAt(row, 7).toString();
+            //this was the issue that a right click would not work, I'm not sure which call is the correct one.
+            //String keyID = resultTable.getValueAt(row, 7).toString();
+
+            String keyID = resultTable.getValueAt(resultTable.getSelectedRow(), 8).toString();
+
             prettyPrintMessageTextArea(keyID);
             if (saveImage) {
                 activeImages = ImageUtil.saveImages(keyID);
@@ -525,7 +533,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     return Date.class;
                 case 3:
                     return Date.class;
-                case 6:
+                case 7:
                     return Boolean.class;
                 default:
                     return String.class;
@@ -610,33 +618,30 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         resultTable.getColumnModel().getColumn(2).setPreferredWidth(140);
         resultTable.getColumnModel().getColumn(3).setPreferredWidth(140);
         resultTable.getColumnModel().getColumn(4).setPreferredWidth(50);
-        resultTable.getColumnModel().getColumn(5).setPreferredWidth(300);
-
-        resultTable.getColumnModel().getColumn(7).setWidth(0);
-        resultTable.getColumnModel().getColumn(7).setMinWidth(0);
-        resultTable.getColumnModel().getColumn(7).setMaxWidth(0);
+        resultTable.getColumnModel().getColumn(5).setPreferredWidth(10);
+        resultTable.getColumnModel().getColumn(6).setPreferredWidth(300);
+        resultTable.getColumnModel().getColumn(8).setWidth(0);
+        resultTable.getColumnModel().getColumn(8).setMinWidth(0);
+        resultTable.getColumnModel().getColumn(8).setMaxWidth(0);
 
         TableRowSorter<LogWrapperTableModel> sorter = new TableRowSorter<LogWrapperTableModel>(model);
         // add a comparator to the TableRowSorter to sort by dates. Right now it sorts in ascending, but there is no
         // date related sort.
         // We assume that column 2 is date.
-        sorter.setComparator(2, new Comparator<LogWrapperCacheItem>() {
-            public int compare(LogWrapperCacheItem cacheItem1, LogWrapperCacheItem cacheItem2) {
-                // compare two items
-                // return cacheItem1.getServerDate().compareTo(cacheItem2.getServerDate());
-                // just testing
-                return 0;
-            }
-        });
-        // List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
-        // sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
+      
+        List<RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
+        sortKeys.add(new RowSorter.SortKey(2, SortOrder.ASCENDING));
 
-        // sorter.setSortKeys(sortKeys);
+        //on 2 columns set  
+        sorter.setComparator(2, (final Date o1, final Date o2) -> Long.compare(o1.getTime(), o2.getTime()) );  
+
+        sorter.setSortKeys(sortKeys);
+
         resultTable.setRowSorter(sorter);
         resultTable.setDefaultRenderer(Date.class, new TableRenderer());
         resultTable.setDefaultRenderer(String.class, new TableRenderer());
 
-        resultTable.getColumnModel().getColumn(5).setCellRenderer(new ColorRenderer());
+        resultTable.getColumnModel().getColumn(6).setCellRenderer(new ColorRenderer());
         resultTable.getColumnModel().getColumn(1).setCellRenderer(new ColorRenderer());
 
         TableFilterHeader filterHeader = new TableFilterHeader(resultTable, AutoChoices.ENABLED);
@@ -771,6 +776,9 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         // TODO Auto-generated method stub
 
     }
+    
+   
+
 
     /**
      * Custom table renderer that is setting horizontal alligment for some of the columns
@@ -813,6 +821,10 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         }
 
     }
+    
+    
+
+    
 
     /**
      * 
@@ -853,7 +865,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 setBackground(SEQNumber.get((String) value));
                 setForeground(Color.BLACK);
                 break;
-            case 5:
+            case 6:
 
                 if (TraceStringUtils.isRequestMessage((String) value)) {
                     Message settings = MessageTypeManager.fromString((String) value);
@@ -865,7 +877,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                     setForeground(Color.BLACK);
                     Font font = new Font("Verdana", Font.PLAIN, 12);
                     Map attributes = c.getFont().getAttributes();
-                    attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                    //attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
                     c.setFont(new Font(attributes));
                 }
                 break;

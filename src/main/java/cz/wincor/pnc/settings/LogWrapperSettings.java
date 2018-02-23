@@ -47,7 +47,9 @@ public class LogWrapperSettings {
     public static boolean SOAP_CLEAR_ON_START = false;
     public static boolean SOAP_CLEAR_BEFORE = true;
     public static String ENDPOINT_URL = "http://localhost:8080";
-
+    public static boolean CARD_DATA = false;
+    public static String CARD_DATA_VALUE = "";
+    
     private LogWrapperSettings() {
         LOG.info("using current dir : " + currentDir);
     }
@@ -77,6 +79,8 @@ public class LogWrapperSettings {
         prop.put("soapui.clear", Boolean.toString(SOAP_CLEAR_ON_START));
         prop.put("soapui.clear.before", Boolean.toString(SOAP_CLEAR_BEFORE));
         prop.put("cache.size", Integer.toString(LEVEL_DB_CACHE_ALLOCATION));
+        prop.put("tracelog.card", Boolean.toString(CARD_DATA));
+        prop.put("tracelog.cardvalue", CARD_DATA_VALUE);
         OutputStream output = null;
 
         try {
@@ -115,6 +119,8 @@ public class LogWrapperSettings {
             SOAP_CLEAR_ON_START = Boolean.parseBoolean(prop.getProperty("soapui.clear"));
             SOAP_CLEAR_BEFORE = Boolean.parseBoolean(prop.getProperty("soapui.clear.before"));
             LEVEL_DB_CACHE_ALLOCATION = Integer.parseInt(prop.getProperty("cache.size"));
+            CARD_DATA = Boolean.parseBoolean(prop.getProperty("tracelog.card"));
+            CARD_DATA_VALUE = prop.getProperty("tracelog.cardvalue");
         } catch (IOException e) {
             LOG.error("cannot read properties");
         } finally {

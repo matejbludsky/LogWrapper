@@ -36,7 +36,7 @@ public class LogWrapperTableModel extends DefaultTableModel {
     }
 
     public void addRow(LogWrapperCacheItem item, String key) {
-        Object[] data = new Object[] { false, item.getSEQNumber(), item.getServerDate(), item.getClientDate(), item.getATMId(), item.getMessageType(), item.isInfoTransaction(), key };
+        Object[] data = new Object[] { false, item.getSEQNumber(), item.getServerDate(), item.getClientDate(), item.getATMId(),item.getHostTrxMessageType(), item.getMessageType(), false, key };
 
         super.addRow(data);
     }
