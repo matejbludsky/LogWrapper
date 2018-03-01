@@ -59,7 +59,5 @@ jgoodies-forms-1.8.0.jar
 logs/PCELogWrapper.log
 setJAVA8.bat
 soapui/LogWrapper_53a87_JBOSS.xml
-src/main/java/cz/wincor/pnc/gui/jframe/TreeJFrame.java
-src/main/java/cz/wincor/pnc/types/TransactionMessage.java
 template/TestStepTemplate.xml
 template/emptyProjectSOAPUI.xml
