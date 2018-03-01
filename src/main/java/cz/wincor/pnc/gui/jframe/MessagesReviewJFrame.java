@@ -3,6 +3,7 @@ package cz.wincor.pnc.gui.jframe;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -24,7 +25,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,9 +33,9 @@ import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -109,6 +109,10 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
     private JEditorPane dataPreview;
     private JPanel imageView;
     private List<String> activeImages = new ArrayList<>();
+    private List<LogWrapperCacheItem> messages = new LinkedList<LogWrapperCacheItem>();
+    
+    //Maybe I need to keep the DB open and the same instance.
+    LevelDBCache cache =  LevelDBCache.getInstance();
 
     public MessagesReviewJFrame() throws HeadlessException {
         LOG.info("Starting MessagesPanel");
@@ -142,10 +146,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             tableScrollablePane.getVerticalScrollBar().setUnitIncrement(40);
 
 
-            loadContentFromSessionList();
-
-            //This is  the call from before, I'm using the call loadContentFromSessionList()
-            //loadContentFromCache();
+            loadContentFromCache();
 
 
             JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollablePane, previewScrollablePane);
@@ -578,14 +579,15 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 //get the session for this message from the table
                 int rowSelected = resultTable.getSelectedRow();
                 //int rowAtPoint = resultTable.rowAtPoint(SwingUtilities.convertPoint(popup, new Point(0, 0), resultTable));
-                String keyID = resultTable.getValueAt(rowSelected, 7).toString();
+                String keyID = resultTable.getValueAt(rowSelected, 8).toString();
                 LOG.debug("Row selected : " + keyID);
                 //open a dialog to show the session in a tree.GUI.
                 TreeJFrame treeFrame = new TreeJFrame();
                 treeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 treeFrame.pack();
                 treeFrame.setVisible(true);
-                
+                //pass the info for the session: 
+                treeFrame.showTree(keyID, "session", cache );
             }
         });
         popup.add(menuItem);
@@ -599,13 +601,16 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
                 int rowSelected = resultTable.getSelectedRow();
                 //int rowAtPoint = resultTable.rowAtPoint(SwingUtilities.convertPoint(popup, new Point(0, 0), resultTable));
                 //get the item cache key
-                String keyID = resultTable.getValueAt(rowSelected, 7).toString();
+                String keyID = resultTable.getValueAt(rowSelected, 8).toString();
                 LOG.debug("Row selected : " + keyID);
                 //open a dialog to show the session in a tree.GUI.
                 TreeJFrame treeFrame = new TreeJFrame();
                 treeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 treeFrame.pack();
                 treeFrame.setVisible(true);
+                //pass the info for the transaction
+                treeFrame.showTree(keyID, "transaction", cache );
+                
             }
         });
         popup.add(menuItem);
@@ -674,7 +679,7 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
         DB db = null;
         DBIterator iterator = null;
         try {
-            db = LevelDBCache.getInstance().openDatabase();
+            db = cache.openDatabase();
             iterator = db.iterator();
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
                 String key = new String(iterator.peekNext().getKey());
@@ -694,37 +699,9 @@ public class MessagesReviewJFrame extends JFrame implements ILogWrapperUIRendere
             iterator.close();
             db.close();
         }
-
+        
     }
 
-    /**
-     * Loads the messages on the JTable
-     * 
-     * @param cache
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    private void loadContentFromSessionList() throws ClassNotFoundException, IOException {
-
-        DragAndDropPanel.getInstance().logToTextArea("Loading data into preview", true);
-
-        LogWrapperTableModel model = (LogWrapperTableModel) resultTable.getModel();
-        try {
-            // use recursion to create it from the session list
-            // we use a SessionsModelAdapter to handle the specifics of the JTable without interfiering with the actual
-            // data structure.
-            // It will deal also with showing the message at the DragAndDropPanel when we hit the increment of 50.
-            model = SessionsModelAdapter.getTableModel(resultTable);
-
-        } catch (Exception e) {
-
-            JOptionPane.showMessageDialog(this, "Cannot import messages " + e.getMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
-
-        } finally {
-
-        }
-
-    }
 
     public JTable getResultTable() {
         return resultTable;

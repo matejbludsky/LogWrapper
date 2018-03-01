@@ -48,6 +48,8 @@ public class Sessions {
         //this method creates the data structures from the DB
         //The messages in the DB are not in sequence. So, I'll load the DB in a list, sort the list based on SErvertime, then use the list to create the sessions data structure
         //and put them in the JTable model.
+        //This is only the same session if I have the same Workstaion ID. I need to create one session for each time I get a new message with a new Workstiation ID.
+        //This means I need a list of sessions.
         DB db = null;
         DBIterator dbIterator = null;
         List<TransactionMessage> itemsList = new LinkedList<TransactionMessage>();
@@ -93,50 +95,79 @@ public class Sessions {
              
             //get the message to parse the message
             LogWrapperCacheItem item = transactionMessage.getCacheItem();
-            
-            //now we have to parse and create the structure
-            //while not a Login or Logout
-            //WARNNING, we are just creating one transaction per session, but I'm laying out the structure for having several transactions per session.
-            if (!isEndOfSession(item))  {
-                //attach the message to current session
-                //here we should have some magic to parse the messages and create transactions if we were doing it.
-                //we are adding all messages to the same transaction for now. Later we will parse the transactions and get several transactions per session.
-                transaction.addTransactionMessage(transactionMessage);             
-            }
-            
-/*            else if (item.getMessage().contains("LogoutRequest")) {
-                //attach message to current session, which means attach it to the current transaction
-                transaction.addTransactionMessage(transactionMessage);             
-                
-                //for simplicity sake, just create a session and a transaction and add it. We make sure that any malformed sequence
-                //gets the non end of session message (anything else than logout and login) in the next session.
-                session = new Session();
-                transaction = new Transaction();
-                session.addTransaction(transaction);
-                sessions.add(session); 
-            }*/
-          
-            else if (item.getMessage().contains("LoginRequest")) {
-                //again, for simplicity sake, I check if I have a session with a transaction with an empty list of messages, and then start adding them there.
-                //if not, I just create a new session, transasction, and message and add it to sessions, just in case
-                //correct way to solve all of this is to use state machines to keep track of the grammar
-                if (transaction.getTransactionMessages().isEmpty()) {
-                    //we can use this transaction
-                    transaction.addTransactionMessage(transactionMessage);     
-                    session.addTransaction(transaction);
-                    sessions.add(session);                
-                }
-                else {
-                    session = new Session();
-                    transaction = new Transaction();
-                    transaction.addTransactionMessage(transactionMessage);     
-                    session.addTransaction(transaction);
-                    sessions.add(session);
-                }
-            }      
+            addToSession(item, sessions);
         }
         return true;
     }
+    
+    
+    
+private static void addToSession(LogWrapperCacheItem item, List<Session> sessions) {
+    //This method adds the message to one session, based on workstation ID, and the type of message. All messages are supoused to be in order 
+    
+    
+    //look for workstationID in the sessions
+    
+    //                                                                                                                                                                                                                                                                                                                                                                       
+    
+    
+        
+    }
+
+/*    for (TransactionMessage transactionMessage : itemsList) {
+        //we are creating ONE Transaction object to hold every message of a session, later I'll create transactions based
+        //on the actual transactions carried out by the messages.
+         
+        //get the message to parse the message
+        LogWrapperCacheItem item = transactionMessage.getCacheItem();
+        //get the workstation ID
+        workStIdSession = item.getATMId();
+        
+        //now we have to parse and create the structure
+        //while not a Login or Logout
+        //WARNNING, we are just creating one transaction per session, but I'm laying out the structure for having several transactions per session.
+        if (!isEndOfSession(item))  {
+            //attach the message to current session
+            //here we should have some magic to parse the messages and create transactions if we were doing it.
+            //we are adding all messages to the same transaction for now. Later we will parse the transactions and get several transactions per session.
+            transaction.addTransactionMessage(transactionMessage);             
+        }
+        
+            else if (item.getMessage().contains("LogoutRequest")) {
+            //attach message to current session, which means attach it to the current transaction
+            transaction.addTransactionMessage(transactionMessage);             
+            
+            //for simplicity sake, just create a session and a transaction and add it. We make sure that any malformed sequence
+            //gets the non end of session message (anything else than logout and login) in the next session.
+            session = new Session();
+            transaction = new Transaction();
+            session.addTransaction(transaction);
+            sessions.add(session); 
+        }
+      
+        else if (item.getMessage().contains("LoginRequest")) {
+            //again, for simplicity sake, I check if I have a session with a transaction with an empty list of messages, and then start adding them there.
+            //if not, I just create a new session, transasction, and message and add it to sessions, just in case
+            //correct way to solve all of this is to use state machines to keep track of the grammar
+            if (transaction.getTransactionMessages().isEmpty()) {
+                //we can use this transaction
+                transaction.addTransactionMessage(transactionMessage);     
+                session.addTransaction(transaction);
+                sessions.add(session);                
+            }
+            else {
+                session = new Session();
+                transaction = new Transaction();
+                transaction.addTransactionMessage(transactionMessage);     
+                session.addTransaction(transaction);
+                sessions.add(session);
+            }
+        }      
+    }
+    return true;
+}*/
+    
+    
     
     private static boolean isEndOfSession(LogWrapperCacheItem item) {
         //this method seeks a Login or Logout message to mean that the session has finished. A Login means, that we didn't get a Logout message prior to it.
